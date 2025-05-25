@@ -20,4 +20,10 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: docker-compose
+      - name: docker-compose 빌드
+        run: |
+          docker compose build
+
+      - name: docker-compose 푸시
+        run: |
+          docker compose push
