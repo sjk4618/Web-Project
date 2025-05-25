@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
-import { sentences } from "../data/sentences";
 import { Line } from "react-chartjs-2";
+import { sentences } from "../data/sentences";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -12,6 +12,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import { ENGLISH_QUOTES } from "../constants/englishQuotes";
 
 ChartJS.register(
   CategoryScale,
@@ -102,6 +103,37 @@ const ChartContainer = styled.div`
   height: 300px;
 `;
 
+const GameStats = styled.div`
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 5px;
+`;
+
+const StatItem = styled.div`
+  text-align: center;
+`;
+
+const StatLabel = styled.div`
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 0.3rem;
+`;
+
+const StatValue = styled.div`
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #333;
+`;
+
+const StatDescription = styled.div`
+  font-size: 0.8rem;
+  color: #888;
+  max-width: 150px;
+`;
+
 const TypingGame = () => {
   const [difficulty, setDifficulty] = useState("medium");
   const [currentSentence, setCurrentSentence] = useState("");
@@ -110,53 +142,182 @@ const TypingGame = () => {
   const [isGameActive, setIsGameActive] = useState(false);
   const [scores, setScores] = useState([]);
   const [bestScore, setBestScore] = useState(0);
+  const [gameStats, setGameStats] = useState({
+    totalWords: 0,
+    correctWords: 0,
+    totalTime: 0,
+    currentWpm: 0,
+    currentCpm: 0,
+    averageAccuracy: 0,
+  });
+  const [sentenceQueue, setSentenceQueue] = useState([]);
   const inputRef = useRef(null);
+  const startTimeRef = useRef(null);
 
   useEffect(() => {
-    const savedScores = JSON.parse(
-      localStorage.getItem("typingScores") || "[]"
-    );
-    const savedBestScore = localStorage.getItem("bestScore") || 0;
-    setScores(savedScores);
-    setBestScore(Number(savedBestScore));
-  }, []);
-
-  useEffect(() => {
+    let timer;
     if (isGameActive && timeLeft > 0) {
-      const timer = setInterval(() => {
-        setTimeLeft((prev) => prev - 1);
+      timer = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            endGame();
+            return 0;
+          }
+          return prev - 1;
+        });
       }, 1000);
-      return () => clearInterval(timer);
-    } else if (timeLeft === 0) {
-      endGame();
     }
+    return () => clearInterval(timer);
   }, [isGameActive, timeLeft]);
 
-  const startGame = () => {
-    const sentenceList = sentences[difficulty];
-    const randomIndex = Math.floor(Math.random() * sentenceList.length);
-    setCurrentSentence(sentenceList[randomIndex]);
-    setUserInput("");
-    setTimeLeft(60);
-    setIsGameActive(true);
-    if (inputRef.current) {
-      inputRef.current.focus();
+  const fetchQuotes = async () => {
+    try {
+      const res = await fetch("https://api.quotable.io/quotes?limit=50&page=1");
+      const data = await res.json();
+      const quoteList = data.results.map((item) => item.content);
+
+      // 파파고 프록시로 번역
+      const translatedQuotes = await Promise.all(
+        quoteList.map(async (quote) => {
+          try {
+            const response = await fetch(
+              "https://papago-proxy.fly.dev/translate",
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  text: quote,
+                  source: "en",
+                  target: "ko",
+                }),
+              }
+            );
+            const result = await response.json();
+            return result.translatedText;
+          } catch (err) {
+            console.error("번역 중 오류:", err);
+            return quote; // 번역 실패 시 원문 반환
+          }
+        })
+      );
+
+      return translatedQuotes;
+    } catch (err) {
+      console.error("Quote API 에러 발생:", err);
+      // 실패 시 기본 문장들 반환
+      return ENGLISH_QUOTES;
+    }
+  };
+
+  const getRandomSentences = async (count = 10) => {
+    const quotes = await fetchQuotes();
+    const randomSentences = [];
+    for (let i = 0; i < count; i++) {
+      const randomIndex = Math.floor(Math.random() * quotes.length);
+      randomSentences.push(quotes[randomIndex]);
+    }
+    return randomSentences;
+  };
+
+  const startGame = async () => {
+    try {
+      const initialSentences = await getRandomSentences();
+      setSentenceQueue(initialSentences);
+      setCurrentSentence(initialSentences[0]);
+      setUserInput("");
+      setTimeLeft(60);
+      setIsGameActive(true);
+      startTimeRef.current = Date.now();
+      setGameStats({
+        totalWords: 0,
+        correctWords: 0,
+        totalTime: 0,
+        currentWpm: 0,
+        currentCpm: 0,
+        averageAccuracy: 0,
+      });
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    } catch (err) {
+      console.error("게임 시작 중 오류 발생:", err);
+      // API 호출 실패 시 로컬 데이터 사용
+      const localSentences = sentences[difficulty];
+      setSentenceQueue(localSentences);
+      setCurrentSentence(localSentences[0]);
+      setUserInput("");
+      setTimeLeft(60);
+      setIsGameActive(true);
+      startTimeRef.current = Date.now();
+      setGameStats({
+        totalWords: 0,
+        correctWords: 0,
+        totalTime: 0,
+        currentWpm: 0,
+        currentCpm: 0,
+        averageAccuracy: 0,
+      });
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+    setUserInput(value);
+  };
+
+  const handleKeyDown = async (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const accuracy = calculateAccuracy();
+      const words = currentSentence.split(" ").length;
+
+      setGameStats((prev) => ({
+        ...prev,
+        totalWords: prev.totalWords + words,
+        correctWords: prev.correctWords + (accuracy === 100 ? words : 0),
+        averageAccuracy:
+          (prev.averageAccuracy * prev.totalWords + accuracy) /
+          (prev.totalWords + 1),
+      }));
+
+      // 다음 문장으로 이동
+      const newQueue = [...sentenceQueue];
+      newQueue.shift(); // 현재 문장 제거
+
+      // 문장이 부족하면 새로운 문장 추가
+      if (newQueue.length < 3) {
+        const newSentences = await getRandomSentences(5);
+        newQueue.push(...newSentences);
+      }
+
+      setSentenceQueue(newQueue);
+      setCurrentSentence(newQueue[0]);
+      setUserInput("");
     }
   };
 
   const endGame = () => {
     setIsGameActive(false);
-    const wpm = calculateWPM();
-    const accuracy = calculateAccuracy();
-    const newScore = { wpm, accuracy, date: new Date().toLocaleDateString() };
+    const finalStats = {
+      wpm: gameStats.currentWpm,
+      accuracy: Math.round(gameStats.averageAccuracy),
+      totalWords: gameStats.totalWords,
+      correctWords: gameStats.correctWords,
+      difficulty,
+      date: new Date().toLocaleDateString(),
+    };
 
-    const newScores = [...scores, newScore].slice(-10);
+    const newScores = [...scores, finalStats].slice(-10);
     setScores(newScores);
     localStorage.setItem("typingScores", JSON.stringify(newScores));
 
-    if (wpm > bestScore) {
-      setBestScore(wpm);
-      localStorage.setItem("bestScore", wpm);
+    if (finalStats.wpm > bestScore) {
+      setBestScore(finalStats.wpm);
+      localStorage.setItem("bestScore", finalStats.wpm);
     }
 
     // 로컬 스토리지에 점수 저장
@@ -173,25 +334,13 @@ const TypingGame = () => {
             users[userIndex].scores = [];
           }
 
-          users[userIndex].scores.push({
-            wpm,
-            accuracy,
-            difficulty,
-            date: new Date().toLocaleDateString(),
-          });
-
+          users[userIndex].scores.push(finalStats);
           localStorage.setItem("users", JSON.stringify(users));
         }
       }
     } catch (err) {
       console.error("점수 저장 중 오류:", err);
     }
-  };
-
-  const calculateWPM = () => {
-    const words = currentSentence.split(" ").length;
-    const timeInMinutes = (60 - timeLeft) / 60;
-    return Math.round(words / timeInMinutes);
   };
 
   const calculateAccuracy = () => {
@@ -262,23 +411,52 @@ const TypingGame = () => {
 
         <Timer time={timeLeft}>{timeLeft}초</Timer>
 
+        {isGameActive && (
+          <GameStats>
+            <StatItem>
+              <StatLabel>현재 WPM</StatLabel>
+              <StatValue>{gameStats.currentWpm}</StatValue>
+              <StatDescription>
+                WPM(Words Per Minute)은 1분당 입력한 단어 수를 의미합니다.
+              </StatDescription>
+            </StatItem>
+            <StatItem>
+              <StatLabel>현재 CPM</StatLabel>
+              <StatValue>{gameStats.currentCpm}</StatValue>
+              <StatDescription>
+                CPM(Characters Per Minute)은 1분당 입력한 글자 수를 의미합니다.
+              </StatDescription>
+            </StatItem>
+            <StatItem>
+              <StatLabel>정확도</StatLabel>
+              <StatValue>{Math.round(gameStats.averageAccuracy)}%</StatValue>
+              <StatDescription>
+                정확하게 입력한 글자의 비율입니다.
+              </StatDescription>
+            </StatItem>
+            <StatItem>
+              <StatLabel>총 단어</StatLabel>
+              <StatValue>{gameStats.totalWords}</StatValue>
+              <StatDescription>
+                지금까지 입력한 총 단어 수입니다.
+              </StatDescription>
+            </StatItem>
+          </GameStats>
+        )}
+
         <TextDisplay>{renderText()}</TextDisplay>
 
         <Input
           ref={inputRef}
           value={userInput}
-          onChange={(e) => setUserInput(e.target.value)}
+          onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
           disabled={!isGameActive}
           placeholder={
             isGameActive
-              ? "타이핑을 시작하세요..."
+              ? "타이핑을 시작하세요... (엔터로 다음 문장)"
               : "게임을 시작하려면 난이도를 선택하세요"
           }
-          onKeyDown={(e) => {
-            if (!isGameActive && e.key !== "Enter") {
-              startGame();
-            }
-          }}
         />
 
         {!isGameActive && timeLeft === 60 && (
@@ -287,8 +465,12 @@ const TypingGame = () => {
 
         {!isGameActive && timeLeft === 0 && (
           <ResultBox>
-            <ScoreText>WPM: {calculateWPM()}</ScoreText>
-            <ScoreText>정확도: {calculateAccuracy()}%</ScoreText>
+            <ScoreText>최종 WPM: {gameStats.currentWpm}</ScoreText>
+            <ScoreText>
+              평균 정확도: {Math.round(gameStats.averageAccuracy)}%
+            </ScoreText>
+            <ScoreText>총 입력 단어: {gameStats.totalWords}</ScoreText>
+            <ScoreText>정확한 단어: {gameStats.correctWords}</ScoreText>
             <ScoreText>최고 기록: {bestScore} WPM</ScoreText>
             <Button onClick={startGame}>다시 시작</Button>
           </ResultBox>

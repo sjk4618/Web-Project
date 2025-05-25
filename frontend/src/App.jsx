@@ -4,11 +4,13 @@ import {
   Routes,
   Route,
   Navigate,
+  Link,
 } from "react-router-dom";
 import styled from "styled-components";
 import TypingGame from "./components/TypingGame";
 import Auth from "./components/Auth";
 import Ranking from "./components/Ranking";
+import MyPage from "./components/MyPage";
 
 const AppContainer = styled.div`
   min-height: 100vh;
@@ -56,6 +58,17 @@ const UserInfo = styled.div`
   gap: 1rem;
 `;
 
+const NavLink = styled(Link)`
+  text-decoration: none;
+  color: #333;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+
+  &:hover {
+    background-color: #f5f5f5;
+  }
+`;
+
 function App() {
   const [user, setUser] = useState(null);
 
@@ -82,10 +95,15 @@ function App() {
           <Title>타이핑 게임</Title>
           <Nav>
             {user ? (
-              <UserInfo>
-                <span>안녕하세요, {user.username}님!</span>
-                <Button onClick={handleLogout}>로그아웃</Button>
-              </UserInfo>
+              <>
+                <UserInfo>
+                  <span>안녕하세요, {user.username}님!</span>
+                  <NavLink to="/">게임</NavLink>
+                  <NavLink to="/ranking">랭킹</NavLink>
+                  <NavLink to="/mypage">마이페이지</NavLink>
+                  <Button onClick={handleLogout}>로그아웃</Button>
+                </UserInfo>
+              </>
             ) : (
               <Button primary onClick={() => (window.location.href = "/login")}>
                 로그인
@@ -108,6 +126,10 @@ function App() {
           <Route
             path="/ranking"
             element={user ? <Ranking /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/mypage"
+            element={user ? <MyPage /> : <Navigate to="/login" />}
           />
         </Routes>
       </AppContainer>

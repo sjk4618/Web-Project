@@ -89,7 +89,7 @@ const Ranking = () => {
       userRankings.sort((a, b) => b.highestWpm - a.highestWpm);
 
       setRankings(userRankings);
-    } catch (err) {
+    } catch {
       setError("랭킹을 불러오는데 실패했습니다.");
     } finally {
       setLoading(false);
