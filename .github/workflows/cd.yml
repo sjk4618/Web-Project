@@ -27,4 +27,4 @@ jobs:
           context: ./proxy
           file: ./proxy/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/web-project:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/webproject:latest
