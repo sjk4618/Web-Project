@@ -13,6 +13,7 @@ import {
   Legend,
 } from "chart.js";
 import { ENGLISH_QUOTES } from "../constants/englishQuotes";
+import axios from "axios";
 
 ChartJS.register(
   CategoryScale,
@@ -173,28 +174,20 @@ const TypingGame = () => {
 
   const fetchQuotes = async () => {
     try {
-      const res = await fetch("https://api.quotable.io/quotes?limit=50&page=1");
-      const data = await res.json();
-      const quoteList = data.results.map((item) => item.content);
+      // nginx 프록시를 통해 Vercel serverless function으로 요청
+      const res = await axios.get("/api/quotes");
+      const quoteList = res.data.results.map((item) => item.content);
 
-      // 파파고 프록시로 번역
+      // 번역도 nginx 프록시를 통해 요청
       const translatedQuotes = await Promise.all(
         quoteList.map(async (quote) => {
           try {
-            const response = await fetch(
-              "https://papago-proxy.fly.dev/translate",
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  text: quote,
-                  source: "en",
-                  target: "ko",
-                }),
-              }
-            );
-            const result = await response.json();
-            return result.translatedText;
+            const response = await axios.post("/api/translate", {
+              text: quote,
+              source: "en",
+              target: "ko",
+            });
+            return response.data.translatedText;
           } catch (err) {
             console.error("번역 중 오류:", err);
             return quote; // 번역 실패 시 원문 반환
