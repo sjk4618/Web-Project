@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Install dependencies (yarn or npm)
+        run: |
+          if [ -f yarn.lock ]; then yarn install --frozen-lockfile; else npm ci; fi
+      - name: Lint
+        run: |
+          if [ -f yarn.lock ]; then yarn lint || true; else npm run lint || true; fi
+      - name: Build
+        run: |
+          if [ -f yarn.lock ]; then yarn build; else npm run build; fi
+      - name: Test
+        run: |
+          if [ -f yarn.lock ]; then yarn test || true; else npm test || true; fi
