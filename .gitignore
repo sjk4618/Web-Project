@@ -30,4 +30,3 @@ yarn-error.log
 
 # 서버리스 캐시
 serverless/.vercel/
-serverless/cache/ 
