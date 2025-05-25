@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18.x, 20.x]
+        node-version: [20.x]
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.node-version }}
@@ -29,11 +29,14 @@ jobs:
             npm install
           fi
       - name: Lint
+        working-directory: ./frontend
         run: |
           if [ -f yarn.lock ]; then yarn lint || true; else npm run lint || true; fi
       - name: Build
+        working-directory: ./frontend
         run: |
           if [ -f yarn.lock ]; then yarn build; else npm run build; fi
       - name: Test
+        working-directory: ./frontend
         run: |
           if [ -f yarn.lock ]; then yarn test || true; else npm test || true; fi
