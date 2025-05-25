@@ -4,13 +4,15 @@ on:
   push:
     branches: [main]
 
+env:
+  working-directory: ./proxy  # Dockerfile이 있는 폴더로 변경
+
 jobs:
   docker:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -21,10 +23,9 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./proxy
-          file: ./proxy/Dockerfile
-          push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/webproject:latest
+      - name: docker image 빌드 및 푸시
+        run: |
+          IMAGE_TAG=main
+          docker build --platform linux/amd64 -t sjktest/webproject:$IMAGE_TAG .
+          docker push sjktest/webproject:$IMAGE_TAG
+        working-directory: ${{ env.working-directory }}
