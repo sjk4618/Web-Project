@@ -4,9 +4,6 @@ on:
   push:
     branches: [main]
 
-env:
-  working-directory: ./proxy  # Dockerfile이 있는 폴더로 변경
-
 jobs:
   docker:
     runs-on: ubuntu-latest
@@ -23,9 +20,4 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: docker image 빌드 및 푸시
-        run: |
-          IMAGE_TAG=main
-          docker build --platform linux/amd64 -t sjktest/webproject:$IMAGE_TAG .
-          docker push sjktest/webproject:$IMAGE_TAG
-        working-directory: ${{ env.working-directory }}
+      - name: docker-compose
