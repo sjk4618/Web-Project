@@ -467,20 +467,21 @@ const TypingGame = () => {
         let minLength = 0,
           maxLength = 1000;
         if (difficulty === "easy") {
-          maxLength = 50;
+          maxLength = 80;
         } else if (difficulty === "hard") {
-          minLength = 80;
+          minLength = 90;
         }
         const res = await axios.get(
           `/api/quotes?minLength=${minLength}&maxLength=${maxLength}`
         );
-        initialSentences = res.data.results.map((item) => ({
-          content: item.content,
-          author: item.author,
+        // API 응답 형식에 맞게 데이터 매핑
+        initialSentences = res.data.map((quote) => ({
+          content: quote.content,
+          author: quote.author,
         }));
       }
 
-      setRemainingSentences(initialSentences.slice(0, 10));
+      setRemainingSentences(initialSentences);
       setCurrentSentence(initialSentences[0]);
       setUserInput("");
       setIsGameActive(true);
@@ -554,9 +555,10 @@ const TypingGame = () => {
         minLength = 90;
       }
       const res = await axios.get(
-        `/api/quotes?limit=10&minLength=${minLength}&maxLength=${maxLength}`
+        `/api/quotes?minLength=${minLength}&maxLength=${maxLength}`
       );
-      const quotes = res.data.results;
+      // API 응답 형식에 맞게 데이터 매핑
+      const quotes = res.data;
       const translated = await Promise.all(
         quotes.map(async (quote) => {
           try {
@@ -581,7 +583,7 @@ const TypingGame = () => {
       return translated;
     } catch (err) {
       console.error("Quote API 에러 발생:", err);
-      return ENGLISH_QUOTES.slice(0, 30);
+      return ENGLISH_QUOTES.slice(0, 10);
     }
   };
 
