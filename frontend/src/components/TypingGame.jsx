@@ -194,6 +194,7 @@ const TypingGame = () => {
 
       // 처음 10개만 번역
       const initialQuotes = quotes.slice(0, 10);
+      console.log("번역 시작할 명언:", initialQuotes.length, "개");
       const translatedInitial = await Promise.all(
         initialQuotes.map(async (quote) => {
           try {
@@ -210,15 +211,17 @@ const TypingGame = () => {
         })
       );
 
+      console.log("번역 완료된 명언:", translatedInitial.length, "개");
       setTranslatedQuotes(translatedInitial);
       return translatedInitial;
     } catch (err) {
       console.error("Quote API 에러 발생:", err);
-      return ENGLISH_QUOTES;
+      return ENGLISH_QUOTES.slice(0, 10); // 기본 문장도 10개만 반환
     }
   };
 
   const translateRemainingQuotes = async () => {
+    console.log("나머지 명언 번역 시작");
     const remainingQuotes = allQuotes.slice(10);
     const translatedRemaining = await Promise.all(
       remainingQuotes.map(async (quote) => {
@@ -235,6 +238,7 @@ const TypingGame = () => {
         }
       })
     );
+    console.log("나머지 명언 번역 완료:", translatedRemaining.length, "개");
     setTranslatedQuotes((prev) => [...prev, ...translatedRemaining]);
   };
 
