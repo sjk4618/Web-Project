@@ -772,25 +772,23 @@ const TypingGame = () => {
         </LoadingOverlay>
       )}
 
-      {!isGameActive && !selectedDifficulty && (
-        <LanguageSelector>
-          <LanguageButton
-            active={selectedLanguage === "ko"}
-            onClick={() => setSelectedLanguage("ko")}
-          >
-            한글 타자
-          </LanguageButton>
-          <LanguageButton
-            active={selectedLanguage === "en"}
-            onClick={() => setSelectedLanguage("en")}
-          >
-            영어 타자
-          </LanguageButton>
-        </LanguageSelector>
-      )}
-
-      {!isGameActive && selectedLanguage && !selectedDifficulty && (
+      {!isGameActive && (
         <>
+          <LanguageSelector>
+            <LanguageButton
+              active={selectedLanguage === "ko"}
+              onClick={() => setSelectedLanguage("ko")}
+            >
+              한글 타자
+            </LanguageButton>
+            <LanguageButton
+              active={selectedLanguage === "en"}
+              onClick={() => setSelectedLanguage("en")}
+            >
+              영어 타자
+            </LanguageButton>
+          </LanguageSelector>
+
           <DifficultySelector>
             <DifficultyButton
               active={selectedDifficulty === "easy"}
@@ -805,33 +803,12 @@ const TypingGame = () => {
               어려움
             </DifficultyButton>
           </DifficultySelector>
-          <StartMessage>게임을 시작하려면 난이도를 선택해주세요</StartMessage>
-        </>
-      )}
 
-      {!isGameActive && selectedLanguage && selectedDifficulty && (
-        <>
-          <DifficultySelector>
-            <DifficultyButton
-              active={selectedDifficulty === "easy"}
-              onClick={() => setSelectedDifficulty("easy")}
-            >
-              쉬움
-            </DifficultyButton>
-            <DifficultyButton
-              active={selectedDifficulty === "hard"}
-              onClick={() => setSelectedDifficulty("hard")}
-            >
-              어려움
-            </DifficultyButton>
-          </DifficultySelector>
-          <StartButton
-            onClick={startGame}
-            disabled={!selectedLanguage || !selectedDifficulty}
-            active={selectedLanguage && selectedDifficulty}
-          >
-            게임 시작
-          </StartButton>
+          {selectedLanguage && selectedDifficulty && (
+            <StartButton onClick={startGame} active={true}>
+              게임 시작
+            </StartButton>
+          )}
         </>
       )}
 

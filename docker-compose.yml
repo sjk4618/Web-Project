@@ -3,7 +3,7 @@ services:
     build:
       context: ./proxy
       dockerfile: Dockerfile
-    image: sjktest/webproject:dev   # DockerHub에 push할 이미지명
+    image: sjktest/webproject:dev   
     container_name: nginx-proxy
     ports:
       - "8080:80"
@@ -11,5 +11,5 @@ services:
       - joon-network
 
 networks:
-  joon-network:   # 서비스에서 사용하는 네트워크명과 일치시킴
+  joon-network:   
     driver: bridge
