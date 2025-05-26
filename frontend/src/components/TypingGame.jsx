@@ -505,23 +505,27 @@ const TypingGame = () => {
           return;
         }
 
-        // 다음 문장으로 이동
-        setRemainingSentences((prev) => {
-          const newSentences = [...prev];
-          newSentences.shift();
-          setCurrentSentence(newSentences[0]);
-          setUserInput("");
-          return newSentences;
-        });
+        // 게임 통계와 다음 문장으로의 이동을 한 번에 처리
+        setGameStats((prev) => {
+          const newStats = {
+            ...prev,
+            correctWords:
+              prev.correctWords + (currentAccuracy === 100 ? words : 0),
+            completedSentences: currentProgress,
+            totalInputs: prev.totalInputs + 1,
+          };
 
-        // 게임 통계 업데이트
-        setGameStats((prev) => ({
-          ...prev,
-          correctWords:
-            prev.correctWords + (currentAccuracy === 100 ? words : 0),
-          completedSentences: currentProgress,
-          totalInputs: prev.totalInputs + 1,
-        }));
+          // 다음 문장으로 이동
+          setRemainingSentences((prevSentences) => {
+            const newSentences = [...prevSentences];
+            newSentences.shift();
+            setCurrentSentence(newSentences[0]);
+            setUserInput("");
+            return newSentences;
+          });
+
+          return newStats;
+        });
       }
     } catch (err) {
       console.error("키 입력 처리 중 오류 발생:", err);
