@@ -749,7 +749,7 @@ const TypingGame = () => {
 
   return (
     <Container>
-      <Title>타자 게임</Title>
+      <Title>랜덤 명언 타자 게임</Title>
       {error && (
         <ErrorPopup>
           <ErrorContent>
