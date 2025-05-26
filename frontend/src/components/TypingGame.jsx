@@ -496,22 +496,25 @@ const TypingGame = () => {
             ? calculateHangulAccuracy(userInput, content)
             : calculateEnglishAccuracy(userInput, content);
 
-        setGameStats((prev) => {
-          const newCompletedSentences = prev.completedSentences + 1;
-          return {
-            ...prev,
-            correctWords:
-              prev.correctWords + (currentAccuracy === 100 ? words : 0),
-            completedSentences: newCompletedSentences,
-            totalInputs: prev.totalInputs + 1,
-          };
-        });
+        // 현재 진행도 확인
+        const currentProgress = gameStats.completedSentences + 1;
 
-        if (gameStats.completedSentences + 1 >= 10) {
+        // 진행도가 10을 초과하면 게임 종료
+        if (currentProgress >= 10) {
           endGame();
           return;
         }
 
+        // 게임 통계 업데이트
+        setGameStats((prev) => ({
+          ...prev,
+          correctWords:
+            prev.correctWords + (currentAccuracy === 100 ? words : 0),
+          completedSentences: currentProgress,
+          totalInputs: prev.totalInputs + 1,
+        }));
+
+        // 다음 문장으로 이동
         setRemainingSentences((prev) => {
           const newSentences = [...prev];
           newSentences.shift();
@@ -671,6 +674,9 @@ const TypingGame = () => {
     } catch (err) {
       console.error("점수 저장 중 오류:", err);
     }
+
+    // 결과 팝업 표시
+    setShowResult(true);
   };
 
   const renderText = () => {
@@ -678,8 +684,6 @@ const TypingGame = () => {
       typeof currentSentence === "object"
         ? currentSentence.content
         : currentSentence;
-    const author =
-      typeof currentSentence === "object" ? currentSentence.author : null;
 
     return (
       <>
@@ -694,11 +698,9 @@ const TypingGame = () => {
             </span>
           );
         })}
-        {author && (
-          <div style={{ color: "#666", marginTop: "0.5rem", fontSize: "1rem" }}>
-            - {author}
-          </div>
-        )}
+        <div style={{ color: "#666", marginTop: "0.5rem", fontSize: "0.9rem" }}>
+          ※ 작가 이름은 입력하지 않으셔도 됩니다.
+        </div>
       </>
     );
   };
