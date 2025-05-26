@@ -171,7 +171,7 @@ const LanguageButtons = styled.div`
   margin-top: 1rem;
 `;
 
-const TypingGame = () => {
+const TypingGame = ({ onReset }) => {
   const [difficulty, setDifficulty] = useState("");
   const [language, setLanguage] = useState(null); // 'ko' 또는 'en'
   const [currentSentence, setCurrentSentence] = useState("");
@@ -227,6 +227,10 @@ const TypingGame = () => {
       return count + decomposed.length;
     }, 0);
   };
+
+  useEffect(() => {
+    resetGame();
+  }, []);
 
   useEffect(() => {
     let timer;
@@ -300,7 +304,10 @@ const TypingGame = () => {
     if (e.key === "Enter" && isGameActive) {
       e.preventDefault();
       const accuracy = calculateAccuracy();
-      const words = currentSentence.split(" ").length;
+      const words =
+        typeof currentSentence === "object"
+          ? currentSentence.content.split(" ").length
+          : currentSentence.split(" ").length;
 
       setGameStats((prev) => ({
         ...prev,
@@ -564,13 +571,19 @@ const TypingGame = () => {
                 <h3>타자 종류 선택</h3>
                 <LanguageButtons>
                   <Button
-                    onClick={() => setLanguage("ko")}
+                    onClick={() => {
+                      resetGame();
+                      setLanguage("ko");
+                    }}
                     active={language === "ko"}
                   >
                     한글 타자
                   </Button>
                   <Button
-                    onClick={() => setLanguage("en")}
+                    onClick={() => {
+                      resetGame();
+                      setLanguage("en");
+                    }}
                     active={language === "en"}
                   >
                     영어 타자

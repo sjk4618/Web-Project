@@ -115,7 +115,13 @@ function App() {
         <Routes>
           <Route
             path="/"
-            element={user ? <TypingGame /> : <Navigate to="/login" />}
+            element={
+              user ? (
+                <TypingGame onReset={() => window.location.reload()} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
           />
           <Route
             path="/login"
