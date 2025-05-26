@@ -167,10 +167,22 @@ const TypingGame = () => {
           }
           return prev - 1;
         });
+
+        // WPM과 CPM 실시간 계산
+        const elapsedTime = (Date.now() - startTimeRef.current) / 1000 / 60; // 분 단위
+        const totalCharacters = gameStats.totalWords * 5; // 대략적인 문자 수
+        const currentWpm = calculateWPM(totalCharacters, elapsedTime);
+        const currentCpm = calculateCPM(totalCharacters, elapsedTime);
+
+        setGameStats((prev) => ({
+          ...prev,
+          currentWpm,
+          currentCpm,
+        }));
       }, 1000);
     }
     return () => clearInterval(timer);
-  }, [isGameActive, timeLeft]);
+  }, [isGameActive, timeLeft, gameStats.totalWords]);
 
   const fetchQuotes = async () => {
     try {
@@ -268,6 +280,12 @@ const TypingGame = () => {
       const accuracy = calculateAccuracy();
       const words = currentSentence.split(" ").length;
 
+      // 현재까지의 문자 수 계산
+      const totalCharacters = (gameStats.totalWords + words) * 5;
+      const elapsedTime = (Date.now() - startTimeRef.current) / 1000 / 60;
+      const currentWpm = calculateWPM(totalCharacters, elapsedTime);
+      const currentCpm = calculateCPM(totalCharacters, elapsedTime);
+
       setGameStats((prev) => ({
         ...prev,
         totalWords: prev.totalWords + words,
@@ -275,6 +293,8 @@ const TypingGame = () => {
         averageAccuracy:
           (prev.averageAccuracy * prev.totalWords + accuracy) /
           (prev.totalWords + 1),
+        currentWpm,
+        currentCpm,
       }));
 
       // 다음 문장으로 이동
@@ -376,6 +396,17 @@ const TypingGame = () => {
         tension: 0.1,
       },
     ],
+  };
+
+  // WPM과 CPM 계산 함수 추가
+  const calculateWPM = (characters, timeInMinutes) => {
+    // 평균 단어 길이를 5글자로 가정
+    const words = characters / 5;
+    return Math.round(words / timeInMinutes);
+  };
+
+  const calculateCPM = (characters, timeInMinutes) => {
+    return Math.round(characters / timeInMinutes);
   };
 
   return (
