@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 
 const Container = styled.div`
-  max-width: 600px;
+  max-width: 800px;
   margin: 2rem auto;
   padding: 2rem;
   background: white;
@@ -16,110 +16,188 @@ const Title = styled.h2`
   color: #333;
 `;
 
-const Table = styled.table`
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 1rem;
+const RankingList = styled.div`
+  margin-top: 2rem;
 `;
 
-const Th = styled.th`
+const RankingItem = styled.div`
   padding: 1rem;
-  text-align: left;
-  border-bottom: 2px solid #ddd;
-  color: #666;
-`;
+  border-bottom: 1px solid #eee;
+  display: grid;
+  grid-template-columns: 0.5fr 2fr 1fr 1fr 1fr 1fr;
+  gap: 1rem;
+  align-items: center;
 
-const Td = styled.td`
-  padding: 1rem;
-  border-bottom: 1px solid #ddd;
-  color: #333;
-`;
+  &:last-child {
+    border-bottom: none;
+  }
 
-const Tr = styled.tr`
-  &:hover {
-    background-color: #f5f5f5;
+  &.top-1 {
+    background: linear-gradient(to right, #ffd700, #fff8e1);
+  }
+
+  &.top-2 {
+    background: linear-gradient(to right, #c0c0c0, #f5f5f5);
+  }
+
+  &.top-3 {
+    background: linear-gradient(to right, #cd7f32, #ffe4c4);
   }
 `;
 
-const Rank = styled.span`
+const RankingHeader = styled(RankingItem)`
   font-weight: bold;
-  color: ${(props) => {
-    switch (props.rank) {
-      case 1:
-        return "#FFD700";
-      case 2:
-        return "#C0C0C0";
-      case 3:
-        return "#CD7F32";
-      default:
-        return "#666";
-    }
-  }};
+  background: #f8f9fa;
+  border-radius: 5px;
+  margin-bottom: 1rem;
+`;
+
+const RankNumber = styled.div`
+  font-weight: bold;
+  color: #666;
+  text-align: center;
+`;
+
+const Username = styled.div`
+  font-weight: bold;
+  color: #333;
+`;
+
+const Score = styled.div`
+  color: #2196f3;
+  font-weight: bold;
+`;
+
+const Accuracy = styled.div`
+  color: #4caf50;
+`;
+
+const TypingSpeed = styled.div`
+  color: #ff9800;
+`;
+
+const Difficulty = styled.div`
+  color: #666;
+`;
+
+const LanguageSelector = styled.div`
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+`;
+
+const LanguageButton = styled.button`
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 5px;
+  background-color: ${(props) => (props.active ? "#4CAF50" : "#ddd")};
+  color: ${(props) => (props.active ? "white" : "#333")};
+  cursor: pointer;
+  font-size: 1rem;
+
+  &:hover {
+    background-color: ${(props) => (props.active ? "#45a049" : "#ccc")};
+  }
 `;
 
 const Ranking = () => {
-  const [rankings, setRankings] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [rankings, setRankings] = useState({
+    ko: [],
+    en: [],
+  });
+  const [selectedLanguage, setSelectedLanguage] = useState("ko");
 
   useEffect(() => {
-    try {
-      const users = JSON.parse(localStorage.getItem("users") || "[]");
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    const allScores = {
+      ko: [],
+      en: [],
+    };
 
-      // 각 사용자의 평균 정확도 계산
-      const userRankings = users.map((user) => {
-        const scores = user.scores || [];
-        const averageAccuracy =
-          scores.length > 0
-            ? Math.round(
-                scores.reduce((acc, curr) => acc + curr.accuracy, 0) /
-                  scores.length
-              )
-            : 0;
+    users.forEach((user) => {
+      if (user.scores && user.scores.length > 0) {
+        user.scores.forEach((score) => {
+          // 정확도와 타수를 합산한 점수 계산 (정확도 60%, 타수 40% 비중)
+          const totalScore = Math.round(
+            score.accuracy * 0.6 + score.typingSpeed * 0.4
+          );
 
-        return {
-          username: user.username,
-          averageAccuracy,
-        };
-      });
+          const scoreData = {
+            username: user.username,
+            date: score.date,
+            accuracy: score.accuracy,
+            typingSpeed: score.typingSpeed,
+            totalScore: totalScore,
+            difficulty: score.difficulty,
+          };
 
-      // 정확도 기준으로 정렬
-      userRankings.sort((a, b) => b.averageAccuracy - a.averageAccuracy);
+          if (score.language === "ko") {
+            allScores.ko.push(scoreData);
+          } else {
+            allScores.en.push(scoreData);
+          }
+        });
+      }
+    });
 
-      setRankings(userRankings);
-    } catch {
-      setError("랭킹을 불러오는데 실패했습니다.");
-    } finally {
-      setLoading(false);
-    }
+    // 각 언어별로 총점 기준 내림차순 정렬
+    setRankings({
+      ko: allScores.ko.sort((a, b) => b.totalScore - a.totalScore),
+      en: allScores.en.sort((a, b) => b.totalScore - a.totalScore),
+    });
   }, []);
-
-  if (loading) return <Container>로딩 중...</Container>;
-  if (error) return <Container>{error}</Container>;
 
   return (
     <Container>
-      <Title>타이핑 게임 랭킹</Title>
-      <Table>
-        <thead>
-          <tr>
-            <Th>순위</Th>
-            <Th>사용자</Th>
-            <Th>평균 정확도</Th>
-          </tr>
-        </thead>
-        <tbody>
-          {rankings.map((user, index) => (
-            <Tr key={user.username}>
-              <Td>
-                <Rank rank={index + 1}>{index + 1}</Rank>
-              </Td>
-              <Td>{user.username}</Td>
-              <Td>{user.averageAccuracy}%</Td>
-            </Tr>
-          ))}
-        </tbody>
-      </Table>
+      <Title>랭킹</Title>
+
+      <LanguageSelector>
+        <LanguageButton
+          active={selectedLanguage === "ko"}
+          onClick={() => setSelectedLanguage("ko")}
+        >
+          한글 타자
+        </LanguageButton>
+        <LanguageButton
+          active={selectedLanguage === "en"}
+          onClick={() => setSelectedLanguage("en")}
+        >
+          영어 타자
+        </LanguageButton>
+      </LanguageSelector>
+
+      <RankingList>
+        <RankingHeader>
+          <div>순위</div>
+          <div>사용자</div>
+          <div>총점</div>
+          <div>정확도</div>
+          <div>타수</div>
+          <div>난이도</div>
+        </RankingHeader>
+        {rankings[selectedLanguage].map((score, index) => (
+          <RankingItem
+            key={index}
+            className={
+              index === 0
+                ? "top-1"
+                : index === 1
+                ? "top-2"
+                : index === 2
+                ? "top-3"
+                : ""
+            }
+          >
+            <RankNumber>{index + 1}</RankNumber>
+            <Username>{score.username}</Username>
+            <Score>{score.totalScore}점</Score>
+            <Accuracy>{score.accuracy}%</Accuracy>
+            <TypingSpeed>{score.typingSpeed}타/분</TypingSpeed>
+            <Difficulty>{score.difficulty}</Difficulty>
+          </RankingItem>
+        ))}
+      </RankingList>
     </Container>
   );
 };

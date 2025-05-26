@@ -180,8 +180,21 @@ const LoadingSubText = styled.div`
   color: #888;
 `;
 
+const LanguageSelection = styled.div`
+  text-align: center;
+  margin-bottom: 2rem;
+`;
+
+const LanguageButtons = styled.div`
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1rem;
+`;
+
 const TypingGame = () => {
   const [difficulty, setDifficulty] = useState("medium");
+  const [language, setLanguage] = useState(null); // 'ko' 또는 'en'
   const [currentSentence, setCurrentSentence] = useState("");
   const [userInput, setUserInput] = useState("");
   const [isGameActive, setIsGameActive] = useState(false);
@@ -335,9 +348,20 @@ const TypingGame = () => {
   };
 
   const startGame = async () => {
+    if (!language) return; // 언어가 선택되지 않았으면 시작하지 않음
+
     setIsLoading(true);
     try {
-      const initialSentences = await fetchAndTranslate30Quotes();
+      let initialSentences;
+      if (language === "ko") {
+        // 한글 타자: 영어 명언을 받아와서 번역
+        initialSentences = await fetchAndTranslate30Quotes();
+      } else {
+        // 영어 타자: 영어 명언만 받아옴
+        const res = await axios.get("/api/quotes?limit=30");
+        initialSentences = res.data.results.map((item) => item.content);
+      }
+
       setSentenceQueue(initialSentences.slice(0, 10));
       setCurrentSentence(initialSentences[0]);
       setUserInput("");
@@ -418,7 +442,9 @@ const TypingGame = () => {
       accuracy: Math.round(gameStats.averageAccuracy),
       correctWords: gameStats.correctWords,
       difficulty,
+      language, // 언어 정보 추가
       date: new Date().toLocaleDateString(),
+      typingSpeed: gameStats.typingSpeed,
     };
 
     const newScores = [...scores, finalStats].slice(-10);
@@ -496,105 +522,136 @@ const TypingGame = () => {
             <LoadingSpinner />
             <LoadingText>게임 준비 중...</LoadingText>
             <LoadingSubText>
-              명언을 받아오고 번역하는 중입니다.
+              {language === "ko"
+                ? "명언을 받아오고 번역하는 중입니다."
+                : "명언을 받아오는 중입니다."}
               <br />
               잠시만 기다려주세요.
             </LoadingSubText>
           </LoadingView>
         ) : (
           <>
-            <DifficultyButtons>
-              <Button
-                active={difficulty === "easy"}
-                onClick={() => setDifficulty("easy")}
-              >
-                쉬움
-              </Button>
-              <Button
-                active={difficulty === "medium"}
-                onClick={() => setDifficulty("medium")}
-              >
-                보통
-              </Button>
-              <Button
-                active={difficulty === "hard"}
-                onClick={() => setDifficulty("hard")}
-              >
-                어려움
-              </Button>
-            </DifficultyButtons>
+            {!language && (
+              <LanguageSelection>
+                <h3>타자 종류 선택</h3>
+                <LanguageButtons>
+                  <Button
+                    onClick={() => setLanguage("ko")}
+                    active={language === "ko"}
+                  >
+                    한글 타자
+                  </Button>
+                  <Button
+                    onClick={() => setLanguage("en")}
+                    active={language === "en"}
+                  >
+                    영어 타자
+                  </Button>
+                </LanguageButtons>
+              </LanguageSelection>
+            )}
 
-            {isGameActive && (
+            {language && (
               <>
-                <Timer>
-                  경과 시간: {formatElapsedTime(gameStats.elapsedTime)}
-                </Timer>
-                <GameStats>
-                  <StatItem>
-                    <StatLabel>정확도</StatLabel>
-                    <StatValue>
-                      {Math.round(gameStats.averageAccuracy)}%
-                    </StatValue>
-                    <StatDescription>
-                      정확하게 입력한 글자의 비율입니다.
-                    </StatDescription>
-                  </StatItem>
-                  <StatItem>
-                    <StatLabel>타수</StatLabel>
-                    <StatValue>{gameStats.typingSpeed}타/분</StatValue>
-                    <StatDescription>
-                      한컴타자연습 방식 (자음/모음 각각 1타)
-                    </StatDescription>
-                  </StatItem>
-                  <StatItem>
-                    <StatLabel>진행도</StatLabel>
-                    <StatValue>{gameStats.completedSentences}/10</StatValue>
-                    <StatDescription>완료한 문장 수</StatDescription>
-                  </StatItem>
-                </GameStats>
+                <DifficultyButtons>
+                  <Button
+                    active={difficulty === "easy"}
+                    onClick={() => setDifficulty("easy")}
+                  >
+                    쉬움
+                  </Button>
+                  <Button
+                    active={difficulty === "medium"}
+                    onClick={() => setDifficulty("medium")}
+                  >
+                    보통
+                  </Button>
+                  <Button
+                    active={difficulty === "hard"}
+                    onClick={() => setDifficulty("hard")}
+                  >
+                    어려움
+                  </Button>
+                </DifficultyButtons>
+
+                {isGameActive && (
+                  <>
+                    <Timer>
+                      경과 시간: {formatElapsedTime(gameStats.elapsedTime)}
+                    </Timer>
+                    <GameStats>
+                      <StatItem>
+                        <StatLabel>정확도</StatLabel>
+                        <StatValue>
+                          {Math.round(gameStats.averageAccuracy)}%
+                        </StatValue>
+                        <StatDescription>
+                          정확하게 입력한 글자의 비율입니다.
+                        </StatDescription>
+                      </StatItem>
+                      <StatItem>
+                        <StatLabel>타수</StatLabel>
+                        <StatValue>{gameStats.typingSpeed}타/분</StatValue>
+                        <StatDescription>
+                          {language === "ko"
+                            ? "한컴타자연습 방식 (자음/모음 각각 1타)"
+                            : "영어 타자 방식 (키 입력 기준)"}
+                        </StatDescription>
+                      </StatItem>
+                      <StatItem>
+                        <StatLabel>진행도</StatLabel>
+                        <StatValue>{gameStats.completedSentences}/10</StatValue>
+                        <StatDescription>완료한 문장 수</StatDescription>
+                      </StatItem>
+                    </GameStats>
+                  </>
+                )}
+
+                <TextDisplay>{renderText()}</TextDisplay>
+
+                <Input
+                  ref={inputRef}
+                  value={userInput}
+                  onChange={handleInputChange}
+                  onKeyDown={handleKeyDown}
+                  disabled={!isGameActive}
+                  placeholder={
+                    isGameActive
+                      ? "타이핑을 시작하세요... (엔터로 다음 문장)"
+                      : "게임을 시작하려면 난이도를 선택하세요"
+                  }
+                />
+
+                {!isGameActive && gameStats.completedSentences === 0 && (
+                  <Button onClick={startGame}>게임 시작</Button>
+                )}
+
+                {!isGameActive && gameStats.completedSentences >= 10 && (
+                  <ResultBox>
+                    <ScoreText>
+                      완료 시간: {formatElapsedTime(gameStats.elapsedTime)}
+                    </ScoreText>
+                    <ScoreText>
+                      평균 정확도: {Math.round(gameStats.averageAccuracy)}%
+                    </ScoreText>
+                    <ScoreText>
+                      최종 타수: {gameStats.typingSpeed}타/분
+                    </ScoreText>
+                    <Button
+                      onClick={() => {
+                        setLanguage(null);
+                        startGame();
+                      }}
+                    >
+                      다시 시작
+                    </Button>
+                  </ResultBox>
+                )}
               </>
-            )}
-
-            <TextDisplay>{renderText()}</TextDisplay>
-
-            <Input
-              ref={inputRef}
-              value={userInput}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
-              disabled={!isGameActive}
-              placeholder={
-                isGameActive
-                  ? "타이핑을 시작하세요... (엔터로 다음 문장)"
-                  : "게임을 시작하려면 난이도를 선택하세요"
-              }
-            />
-
-            {!isGameActive && gameStats.completedSentences === 0 && (
-              <Button onClick={startGame}>게임 시작</Button>
-            )}
-
-            {!isGameActive && gameStats.completedSentences >= 10 && (
-              <ResultBox>
-                <ScoreText>
-                  완료 시간: {formatElapsedTime(gameStats.elapsedTime)}
-                </ScoreText>
-                <ScoreText>
-                  평균 정확도: {Math.round(gameStats.averageAccuracy)}%
-                </ScoreText>
-                <ScoreText>최종 타수: {gameStats.typingSpeed}타/분</ScoreText>
-                <Button onClick={startGame}>다시 시작</Button>
-              </ResultBox>
             )}
           </>
         )}
       </GameBox>
-
-      {scores.length > 0 && (
-        <ChartContainer>
-          <Line data={chartData} />
-        </ChartContainer>
-      )}
     </Container>
   );
 };
