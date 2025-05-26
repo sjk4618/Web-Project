@@ -351,7 +351,6 @@ const TypingGame = () => {
   const handleKeyDown = async (e) => {
     if (e.key === "Enter" && isGameActive) {
       e.preventDefault();
-      const accuracy = calculateAccuracy();
       const words =
         typeof currentSentence === "object"
           ? currentSentence.content.split(" ").length
@@ -359,10 +358,8 @@ const TypingGame = () => {
 
       setGameStats((prev) => ({
         ...prev,
-        correctWords: prev.correctWords + (accuracy === 100 ? words : 0),
-        averageAccuracy:
-          (prev.averageAccuracy * prev.correctWords + accuracy) /
-          (prev.correctWords + 1),
+        correctWords:
+          prev.correctWords + (calculateAccuracy() === 100 ? words : 0),
         completedSentences: prev.completedSentences + 1,
       }));
 
