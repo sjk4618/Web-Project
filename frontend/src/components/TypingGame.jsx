@@ -196,6 +196,7 @@ const TypingGame = () => {
     typingSpeed: 0,
     totalKeystrokes: 0,
     correctKeystrokes: 0,
+    totalCorrectInput: "",
   });
   const [, setSentenceQueue] = useState([]);
   const inputRef = useRef(null);
@@ -255,10 +256,13 @@ const TypingGame = () => {
         .filter((char, index) => char === currentSentence[index])
         .join("");
 
-      const correctKeystrokes = calculateHangulKeystrokes(correctInput);
+      // 전체 정확한 입력에 현재 문장의 정확한 입력을 추가
+      const totalCorrectInput = gameStats.totalCorrectInput + correctInput;
+      const correctKeystrokes = calculateHangulKeystrokes(totalCorrectInput);
 
       setGameStats((prev) => ({
         ...prev,
+        totalCorrectInput,
         correctKeystrokes: correctKeystrokes,
         typingSpeed: Math.round((correctKeystrokes / elapsedTime) * 60),
       }));
@@ -308,6 +312,7 @@ const TypingGame = () => {
         typingSpeed: 0,
         totalKeystrokes: 0,
         correctKeystrokes: 0,
+        totalCorrectInput: "",
       });
       if (inputRef.current) {
         inputRef.current.focus();
@@ -328,6 +333,7 @@ const TypingGame = () => {
         typingSpeed: 0,
         totalKeystrokes: 0,
         correctKeystrokes: 0,
+        totalCorrectInput: "",
       });
       if (inputRef.current) {
         inputRef.current.focus();
@@ -359,13 +365,11 @@ const TypingGame = () => {
       setSentenceQueue((prevQueue) => {
         const newQueue = [...prevQueue];
         newQueue.shift();
-        // 만약 5개 이하라면, 새 문장 받아와서 뒤에 붙임 (비동기)
         if (newQueue.length <= 5) {
           fetchAndTranslate30Quotes().then((moreSentences) => {
             setSentenceQueue((q) => [...q, ...moreSentences]);
           });
         }
-        // 현재 문장과 입력값 갱신
         setCurrentSentence(newQueue[0]);
         setUserInput("");
         return newQueue;
