@@ -144,7 +144,6 @@ const TypingGame = () => {
   const [scores, setScores] = useState([]);
   const [bestScore, setBestScore] = useState(0);
   const [gameStats, setGameStats] = useState({
-    totalWords: 0,
     correctWords: 0,
     totalTime: 0,
     currentWpm: 0,
@@ -170,7 +169,7 @@ const TypingGame = () => {
 
         // WPM과 CPM 실시간 계산
         const elapsedTime = (Date.now() - startTimeRef.current) / 1000 / 60; // 분 단위
-        const totalCharacters = gameStats.totalWords * 5; // 대략적인 문자 수
+        const totalCharacters = userInput.length; // 실제 입력된 문자 수 사용
         const currentWpm = calculateWPM(totalCharacters, elapsedTime);
         const currentCpm = calculateCPM(totalCharacters, elapsedTime);
 
@@ -182,7 +181,7 @@ const TypingGame = () => {
       }, 1000);
     }
     return () => clearInterval(timer);
-  }, [isGameActive, timeLeft, gameStats.totalWords]);
+  }, [isGameActive, timeLeft, userInput]);
 
   const fetchQuotes = async () => {
     try {
@@ -259,22 +258,23 @@ const TypingGame = () => {
   const startGame = async () => {
     try {
       const initialSentences = await getRandomSentences();
-      setSentenceQueue(initialSentences);
-      setCurrentSentence(initialSentences[0]);
-      setUserInput("");
-      setTimeLeft(60);
-      setIsGameActive(true);
-      startTimeRef.current = Date.now();
-      setGameStats({
-        totalWords: 0,
-        correctWords: 0,
-        totalTime: 0,
-        currentWpm: 0,
-        currentCpm: 0,
-        averageAccuracy: 0,
-      });
-      if (inputRef.current) {
-        inputRef.current.focus();
+      if (initialSentences && initialSentences.length > 0) {
+        setSentenceQueue(initialSentences);
+        setCurrentSentence(initialSentences[0]);
+        setUserInput("");
+        setTimeLeft(60);
+        setIsGameActive(true);
+        startTimeRef.current = Date.now();
+        setGameStats({
+          correctWords: 0,
+          totalTime: 0,
+          currentWpm: 0,
+          currentCpm: 0,
+          averageAccuracy: 0,
+        });
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
       }
     } catch (err) {
       console.error("게임 시작 중 오류 발생:", err);
@@ -287,7 +287,6 @@ const TypingGame = () => {
       setIsGameActive(true);
       startTimeRef.current = Date.now();
       setGameStats({
-        totalWords: 0,
         correctWords: 0,
         totalTime: 0,
         currentWpm: 0,
@@ -311,21 +310,12 @@ const TypingGame = () => {
       const accuracy = calculateAccuracy();
       const words = currentSentence.split(" ").length;
 
-      // 현재까지의 문자 수 계산
-      const totalCharacters = (gameStats.totalWords + words) * 5;
-      const elapsedTime = (Date.now() - startTimeRef.current) / 1000 / 60;
-      const currentWpm = calculateWPM(totalCharacters, elapsedTime);
-      const currentCpm = calculateCPM(totalCharacters, elapsedTime);
-
       setGameStats((prev) => ({
         ...prev,
-        totalWords: prev.totalWords + words,
         correctWords: prev.correctWords + (accuracy === 100 ? words : 0),
         averageAccuracy:
-          (prev.averageAccuracy * prev.totalWords + accuracy) /
-          (prev.totalWords + 1),
-        currentWpm,
-        currentCpm,
+          (prev.averageAccuracy * prev.correctWords + accuracy) /
+          (prev.correctWords + 1),
       }));
 
       // 다음 문장으로 이동
@@ -349,7 +339,6 @@ const TypingGame = () => {
     const finalStats = {
       wpm: gameStats.currentWpm,
       accuracy: Math.round(gameStats.averageAccuracy),
-      totalWords: gameStats.totalWords,
       correctWords: gameStats.correctWords,
       difficulty,
       date: new Date().toLocaleDateString(),
@@ -489,13 +478,6 @@ const TypingGame = () => {
                 정확하게 입력한 글자의 비율입니다.
               </StatDescription>
             </StatItem>
-            <StatItem>
-              <StatLabel>총 단어</StatLabel>
-              <StatValue>{gameStats.totalWords}</StatValue>
-              <StatDescription>
-                지금까지 입력한 총 단어 수입니다.
-              </StatDescription>
-            </StatItem>
           </GameStats>
         )}
 
@@ -524,7 +506,6 @@ const TypingGame = () => {
             <ScoreText>
               평균 정확도: {Math.round(gameStats.averageAccuracy)}%
             </ScoreText>
-            <ScoreText>총 입력 단어: {gameStats.totalWords}</ScoreText>
             <ScoreText>정확한 단어: {gameStats.correctWords}</ScoreText>
             <ScoreText>최고 기록: {bestScore} WPM</ScoreText>
             <Button onClick={startGame}>다시 시작</Button>
