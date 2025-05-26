@@ -246,7 +246,7 @@ const MyPage = () => {
   const chartData = {
     labels: currentStats.scores
       .sort((a, b) => new Date(a.date) - new Date(b.date))
-      .map((score) => formatDate(score.date)),
+      .map((score, index) => `${index + 1}. ${formatDate(score.date)}`),
     datasets: [
       {
         label: "타수 (타/분)",
@@ -276,6 +276,12 @@ const MyPage = () => {
     scales: {
       y: {
         beginAtZero: true,
+      },
+      x: {
+        ticks: {
+          maxRotation: 45,
+          minRotation: 45,
+        },
       },
     },
   };

@@ -165,6 +165,52 @@ const ResultButton = styled(LanguageButton)`
   min-width: 120px;
 `;
 
+const LoadingOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+`;
+
+const LoadingSpinner = styled.div`
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #4caf50;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+`;
+
+const LoadingText = styled.div`
+  font-size: 1.2rem;
+  color: #333;
+  text-align: center;
+`;
+
+const NoticeText = styled.div`
+  text-align: center;
+  color: #666;
+  font-size: 0.9rem;
+  margin-top: 1rem;
+`;
+
 const TypingGame = () => {
   const [selectedLanguage, setSelectedLanguage] = useState(null);
   const [selectedDifficulty, setSelectedDifficulty] = useState("");
@@ -667,6 +713,19 @@ const TypingGame = () => {
   return (
     <Container>
       <Title>타자 게임</Title>
+      {_isLoading && (
+        <LoadingOverlay>
+          <LoadingSpinner />
+          <LoadingText>
+            {selectedLanguage === "ko"
+              ? "명언을 받아오고 번역하는 중입니다."
+              : "명언을 받아오는 중입니다."}
+            <br />
+            잠시만 기다려주세요.
+          </LoadingText>
+        </LoadingOverlay>
+      )}
+
       {!isGameActive && !selectedDifficulty && (
         <LanguageSelector>
           <LanguageButton
@@ -705,7 +764,23 @@ const TypingGame = () => {
       )}
 
       {!isGameActive && selectedLanguage && selectedDifficulty && (
-        <StartButton onClick={startGame}>게임 시작</StartButton>
+        <>
+          <DifficultySelector>
+            <DifficultyButton
+              active={selectedDifficulty === "easy"}
+              onClick={() => setSelectedDifficulty("easy")}
+            >
+              쉬움
+            </DifficultyButton>
+            <DifficultyButton
+              active={selectedDifficulty === "hard"}
+              onClick={() => setSelectedDifficulty("hard")}
+            >
+              어려움
+            </DifficultyButton>
+          </DifficultySelector>
+          <StartButton onClick={startGame}>게임 시작</StartButton>
+        </>
       )}
 
       {isGameActive && (
@@ -720,6 +795,9 @@ const TypingGame = () => {
               placeholder="여기에 입력하세요..."
               disabled={!isGameActive}
             />
+            <NoticeText>
+              ※ 정확도는 게임 결과에서 확인할 수 있습니다.
+            </NoticeText>
           </GameContainer>
 
           <StatsContainer>
