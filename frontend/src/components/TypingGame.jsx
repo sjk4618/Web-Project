@@ -446,19 +446,6 @@ const TypingGame = () => {
     try {
       if (e.key === "Enter" && isGameActive) {
         e.preventDefault();
-        const words =
-          typeof currentSentence === "object"
-            ? currentSentence.content.split(" ").length
-            : currentSentence.split(" ").length;
-
-        const content =
-          typeof currentSentence === "object"
-            ? currentSentence.content
-            : currentSentence;
-        const currentAccuracy =
-          selectedLanguage === "ko"
-            ? calculateHangulAccuracy(userInput, content)
-            : calculateEnglishAccuracy(userInput, content);
 
         // 현재 진행도 확인
         const currentProgress = gameStats.completedSentences;
@@ -476,8 +463,23 @@ const TypingGame = () => {
 
         // 게임 통계 업데이트
         setGameStats((prev) => {
+          const words =
+            typeof currentSentence === "object"
+              ? currentSentence.content.split(" ").length
+              : currentSentence.split(" ").length;
+
+          const content =
+            typeof currentSentence === "object"
+              ? currentSentence.content
+              : currentSentence;
+          const currentAccuracy =
+            selectedLanguage === "ko"
+              ? calculateHangulAccuracy(userInput, content)
+              : calculateEnglishAccuracy(userInput, content);
+
           const newTotalAccuracy = prev.totalAccuracy + currentAccuracy;
           const newAverageAccuracy = newTotalAccuracy / (currentProgress + 1);
+
           return {
             ...prev,
             correctWords:
