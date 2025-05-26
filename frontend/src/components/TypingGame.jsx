@@ -3,93 +3,94 @@ import styled from "styled-components";
 import { sentences } from "../data/sentences";
 import { ENGLISH_QUOTES } from "../constants/englishQuotes";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const Container = styled.div`
   max-width: 800px;
-  margin: 0 auto;
+  margin: 2rem auto;
   padding: 2rem;
-  font-family: "Noto Sans KR", sans-serif;
-`;
-
-const GameBox = styled.div`
   background: white;
   border-radius: 10px;
-  padding: 2rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+`;
+
+const Title = styled.h1`
+  font-size: 2rem;
+  margin-bottom: 2rem;
+  text-align: center;
+`;
+
+const LanguageSelector = styled.div`
+  text-align: center;
   margin-bottom: 2rem;
 `;
 
-const TextDisplay = styled.div`
-  font-size: 1.5rem;
-  line-height: 2;
-  margin-bottom: 2rem;
-  min-height: 100px;
-`;
-
-const Input = styled.input`
-  width: 100%;
-  padding: 1rem;
-  font-size: 1.2rem;
-  border: 2px solid #ddd;
-  border-radius: 5px;
-  margin-bottom: 1rem;
-
-  &:disabled {
-    background-color: #f5f5f5;
-    cursor: not-allowed;
-  }
-`;
-
-const Timer = styled.div`
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: ${(props) => (props.time <= 10 ? "#ff4444" : "#333")};
-  margin-bottom: 1rem;
-`;
-
-const DifficultyButtons = styled.div`
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 2rem;
-`;
-
-const Button = styled.button`
+const LanguageButton = styled.button`
   padding: 0.5rem 1rem;
   border: none;
   border-radius: 5px;
   background-color: ${(props) => (props.active ? "#4CAF50" : "#ddd")};
   color: ${(props) => (props.active ? "white" : "#333")};
   cursor: pointer;
+  margin: 0 0.5rem;
 
   &:hover {
     background-color: ${(props) => (props.active ? "#45a049" : "#ccc")};
   }
 `;
 
-const ResultBox = styled.div`
-  background: #f8f9fa;
-  padding: 1.5rem;
-  border-radius: 10px;
-  margin-top: 2rem;
+const DifficultySelector = styled.div`
+  text-align: center;
+  margin-bottom: 2rem;
 `;
 
-const ScoreText = styled.p`
+const DifficultyButton = styled(LanguageButton)``;
+
+const StartMessage = styled.div`
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #666;
+`;
+
+const StartButton = styled(LanguageButton)`
+  display: block;
+  margin: 0 auto;
+  padding: 0.8rem 2rem;
+  font-size: 1.1rem;
+`;
+
+const GameContainer = styled.div`
+  margin-bottom: 2rem;
+`;
+
+const TextDisplay = styled.div`
   font-size: 1.2rem;
-  margin: 0.5rem 0;
-`;
-
-const ChartContainer = styled.div`
-  margin-top: 2rem;
-  height: 300px;
-`;
-
-const GameStats = styled.div`
-  display: flex;
-  justify-content: space-between;
+  line-height: 1.6;
   margin-bottom: 1rem;
   padding: 1rem;
   background: #f8f9fa;
   border-radius: 5px;
+  min-height: 100px;
+`;
+
+const Input = styled.input`
+  width: 100%;
+  padding: 0.8rem;
+  font-size: 1.1rem;
+  border: 2px solid #ddd;
+  border-radius: 5px;
+  margin-bottom: 1rem;
+
+  &:focus {
+    outline: none;
+    border-color: #4caf50;
+  }
+`;
+
+const StatsContainer = styled.div`
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 2rem;
 `;
 
 const StatItem = styled.div`
@@ -103,96 +104,31 @@ const StatLabel = styled.div`
 `;
 
 const StatValue = styled.div`
-  font-size: 1.2rem;
+  font-size: 1.5rem;
   font-weight: bold;
   color: #333;
 `;
 
-const StatDescription = styled.div`
-  font-size: 0.8rem;
-  color: #888;
-  max-width: 150px;
-`;
-
-const LoadingView = styled.div`
-  text-align: center;
-  padding: 2rem;
-  font-size: 1.2rem;
-  color: #666;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 1000;
-  min-width: 300px;
-`;
-
-const LoadingSpinner = styled.div`
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #4caf50;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 1rem;
-
-  @keyframes spin {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
-  }
-`;
-
-const LoadingText = styled.div`
-  margin-bottom: 0.5rem;
-  font-weight: bold;
-`;
-
-const LoadingSubText = styled.div`
-  font-size: 0.9rem;
-  color: #888;
-`;
-
-const LanguageSelection = styled.div`
-  text-align: center;
-  margin-bottom: 2rem;
-`;
-
-const LanguageButtons = styled.div`
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-  margin-top: 1rem;
-`;
-
-const ResultPopup = styled.div`
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: white;
-  padding: 2rem;
-  border-radius: 10px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-  z-index: 1000;
-  min-width: 300px;
-  text-align: center;
-`;
-
-const Overlay = styled.div`
+const ResultModal = styled.div`
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
-  z-index: 999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+`;
+
+const ResultContent = styled.div`
+  background: white;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  min-width: 300px;
+  text-align: center;
 `;
 
 const ResultTitle = styled.h2`
@@ -204,46 +140,52 @@ const ResultStats = styled.div`
   margin-bottom: 1.5rem;
 `;
 
-const ResultStat = styled.div`
-  font-size: 1.2rem;
+const ResultStatItem = styled.div`
   margin: 0.5rem 0;
   color: #666;
 `;
 
-const ResultButton = styled(Button)`
-  margin-top: 1rem;
-  width: 100%;
+const ResultStatLabel = styled.div`
+  font-size: 0.9rem;
+  margin-bottom: 0.3rem;
+`;
+
+const ResultStatValue = styled.div`
+  font-size: 1.2rem;
+  font-weight: bold;
+`;
+
+const ResultButtons = styled.div`
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+`;
+
+const ResultButton = styled(LanguageButton)`
+  min-width: 120px;
 `;
 
 const TypingGame = () => {
-  const [difficulty, setDifficulty] = useState("");
-  const [language, setLanguage] = useState(null); // 'ko' 또는 'en'
+  const [selectedLanguage, setSelectedLanguage] = useState(null);
+  const [selectedDifficulty, setSelectedDifficulty] = useState("");
+  const [isGameActive, setIsGameActive] = useState(false);
+  const [_isLoading, setIsLoading] = useState(false);
   const [currentSentence, setCurrentSentence] = useState("");
   const [userInput, setUserInput] = useState("");
-  const [isGameActive, setIsGameActive] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [_remainingSentences, setRemainingSentences] = useState([]);
   const [scores, setScores] = useState([]);
   const [bestScore, setBestScore] = useState(0);
   const [gameStats, setGameStats] = useState({
-    correctWords: 0,
-    totalTime: 0,
-    averageAccuracy: 100,
     typingSpeed: 0,
-    totalKeystrokes: 0,
-    correctKeystrokes: 0,
-    elapsedTime: 0,
+    accuracy: 0,
     completedSentences: 0,
-    totalAccuracy: 0,
-    totalInputs: 0,
-    totalCorrectChars: 0,
-    totalChars: 0,
-    totalDecomposedInput: "",
-    totalDecomposedTarget: "",
-    totalCorrectJamo: 0,
-    totalJamo: 0,
+    correctWords: 0,
+    elapsedTime: 0,
+    averageAccuracy: 0,
   });
-  const [_remainingSentences, setRemainingSentences] = useState([]);
+  const [showResult, setShowResult] = useState(false);
   const inputRef = useRef(null);
+  const navigate = useNavigate();
   const startTimeRef = useRef(null);
   const keystrokeTimesRef = useRef([]);
   const lastKeystrokeTimeRef = useRef(null);
@@ -393,7 +335,7 @@ const TypingGame = () => {
           ? currentSentence.content
           : currentSentence;
 
-      if (language === "ko") {
+      if (selectedLanguage === "ko") {
         // 한글 타자의 경우 자모 단위로 정확도 계산
         const accuracy = calculateHangulAccuracy(value, content);
         setGameStats((prev) => {
@@ -438,7 +380,7 @@ const TypingGame = () => {
           ? currentSentence.content
           : currentSentence;
       const currentAccuracy =
-        language === "ko"
+        selectedLanguage === "ko"
           ? calculateHangulAccuracy(userInput, content)
           : calculateEnglishAccuracy(userInput, content);
 
@@ -469,19 +411,19 @@ const TypingGame = () => {
   };
 
   const startGame = async () => {
-    if (!language) return;
+    if (!selectedLanguage) return;
 
     setIsLoading(true);
     try {
       let initialSentences;
-      if (language === "ko") {
-        initialSentences = await fetchAndTranslate30Quotes(difficulty);
+      if (selectedLanguage === "ko") {
+        initialSentences = await fetchAndTranslate30Quotes(selectedDifficulty);
       } else {
         let minLength = 0,
           maxLength = 1000;
-        if (difficulty === "easy") {
+        if (selectedDifficulty === "easy") {
           maxLength = 80;
-        } else if (difficulty === "hard") {
+        } else if (selectedDifficulty === "hard") {
           minLength = 90;
         }
         const res = await axios.get(
@@ -524,7 +466,7 @@ const TypingGame = () => {
       }
     } catch (err) {
       console.error("게임 시작 중 오류 발생:", err);
-      const localSentences = sentences[difficulty].slice(0, 10);
+      const localSentences = sentences[selectedDifficulty].slice(0, 10);
       setRemainingSentences(localSentences);
       setCurrentSentence(localSentences[0]);
       setUserInput("");
@@ -605,8 +547,8 @@ const TypingGame = () => {
     const finalStats = {
       accuracy: Math.round(gameStats.averageAccuracy),
       correctWords: gameStats.correctWords,
-      difficulty,
-      language,
+      difficulty: selectedDifficulty,
+      language: selectedLanguage,
       date: new Date().toLocaleDateString(),
       typingSpeed: gameStats.typingSpeed,
       elapsedTime: gameStats.elapsedTime,
@@ -675,8 +617,8 @@ const TypingGame = () => {
 
   // 게임 상태 초기화 함수 (상단 탭에서 진입 시 호출)
   const resetGame = () => {
-    setLanguage(null);
-    setDifficulty("");
+    setSelectedLanguage(null);
+    setSelectedDifficulty("");
     setCurrentSentence("");
     setUserInput("");
     setIsGameActive(false);
@@ -704,157 +646,124 @@ const TypingGame = () => {
     setRemainingSentences([]);
   };
 
+  const restartGame = () => {
+    setSelectedLanguage(null);
+    setSelectedDifficulty("");
+    setCurrentSentence("");
+    setUserInput("");
+    setRemainingSentences([]);
+    setGameStats({
+      typingSpeed: 0,
+      accuracy: 0,
+      completedSentences: 0,
+      correctWords: 0,
+      elapsedTime: 0,
+      averageAccuracy: 0,
+    });
+    setShowResult(false);
+    setIsGameActive(false);
+  };
+
   return (
     <Container>
-      <GameBox>
-        {isLoading ? (
-          <LoadingView>
-            <LoadingSpinner />
-            <LoadingText>게임 준비 중...</LoadingText>
-            <LoadingSubText>
-              {language === "ko"
-                ? "명언을 받아오고 번역하는 중입니다."
-                : "명언을 받아오는 중입니다."}
-              <br />
-              잠시만 기다려주세요.
-            </LoadingSubText>
-          </LoadingView>
-        ) : (
-          <>
-            {!language && (
-              <LanguageSelection>
-                <h3>타자 종류 선택</h3>
-                <LanguageButtons>
-                  <Button
-                    onClick={() => {
-                      resetGame();
-                      setLanguage("ko");
-                    }}
-                    active={language === "ko"}
-                  >
-                    한글 타자
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      resetGame();
-                      setLanguage("en");
-                    }}
-                    active={language === "en"}
-                  >
-                    영어 타자
-                  </Button>
-                </LanguageButtons>
-              </LanguageSelection>
-            )}
+      <Title>타자 게임</Title>
+      {!isGameActive && !selectedDifficulty && (
+        <LanguageSelector>
+          <LanguageButton
+            active={selectedLanguage === "ko"}
+            onClick={() => setSelectedLanguage("ko")}
+          >
+            한글 타자
+          </LanguageButton>
+          <LanguageButton
+            active={selectedLanguage === "en"}
+            onClick={() => setSelectedLanguage("en")}
+          >
+            영어 타자
+          </LanguageButton>
+        </LanguageSelector>
+      )}
 
-            {language && (
-              <>
-                {isGameActive && (
-                  <>
-                    <Timer>
-                      경과 시간: {formatElapsedTime(gameStats.elapsedTime)}
-                    </Timer>
-                    <GameStats>
-                      <StatItem>
-                        <StatLabel>타수</StatLabel>
-                        <StatValue>{gameStats.typingSpeed}타/분</StatValue>
-                      </StatItem>
-                      <StatItem>
-                        <StatLabel>진행도</StatLabel>
-                        <StatValue>{gameStats.completedSentences}/10</StatValue>
-                      </StatItem>
-                    </GameStats>
-                  </>
-                )}
+      {!isGameActive && selectedLanguage && !selectedDifficulty && (
+        <>
+          <DifficultySelector>
+            <DifficultyButton
+              active={selectedDifficulty === "easy"}
+              onClick={() => setSelectedDifficulty("easy")}
+            >
+              쉬움
+            </DifficultyButton>
+            <DifficultyButton
+              active={selectedDifficulty === "hard"}
+              onClick={() => setSelectedDifficulty("hard")}
+            >
+              어려움
+            </DifficultyButton>
+          </DifficultySelector>
+          <StartMessage>게임을 시작하려면 난이도를 선택해주세요</StartMessage>
+        </>
+      )}
 
-                <TextDisplay>
-                  {renderText()}
-                  <div
-                    style={{
-                      fontSize: "0.9rem",
-                      color: "#666",
-                      marginTop: "0.5rem",
-                    }}
-                  >
-                    * 사람 이름은 입력하지 않아도 됩니다.
-                  </div>
-                </TextDisplay>
+      {!isGameActive && selectedLanguage && selectedDifficulty && (
+        <StartButton onClick={startGame}>게임 시작</StartButton>
+      )}
 
-                <Input
-                  ref={inputRef}
-                  value={userInput}
-                  onChange={handleInputChange}
-                  onKeyDown={handleKeyDown}
-                  disabled={!isGameActive}
-                  placeholder={
-                    isGameActive
-                      ? "타이핑을 시작하세요... (엔터로 다음 문장)"
-                      : "게임을 시작하려면 난이도를 선택하세요"
-                  }
-                />
+      {isGameActive && (
+        <>
+          <GameContainer>
+            <TextDisplay>{renderText()}</TextDisplay>
+            <Input
+              ref={inputRef}
+              value={userInput}
+              onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
+              placeholder="여기에 입력하세요..."
+              disabled={!isGameActive}
+            />
+          </GameContainer>
 
-                {!isGameActive && !difficulty && (
-                  <DifficultyButtons>
-                    <Button
-                      active={difficulty === "easy"}
-                      onClick={() => setDifficulty("easy")}
-                    >
-                      쉬움
-                    </Button>
-                    <Button
-                      active={difficulty === "hard"}
-                      onClick={() => setDifficulty("hard")}
-                    >
-                      어려움
-                    </Button>
-                  </DifficultyButtons>
-                )}
+          <StatsContainer>
+            <StatItem>
+              <StatLabel>타수</StatLabel>
+              <StatValue>{gameStats.typingSpeed}타/분</StatValue>
+            </StatItem>
+            <StatItem>
+              <StatLabel>진행도</StatLabel>
+              <StatValue>{gameStats.completedSentences}/10</StatValue>
+            </StatItem>
+          </StatsContainer>
+        </>
+      )}
 
-                {!isGameActive &&
-                  difficulty &&
-                  gameStats.completedSentences === 0 && (
-                    <Button onClick={startGame}>게임 시작</Button>
-                  )}
-
-                {!isGameActive && gameStats.completedSentences >= 10 && (
-                  <>
-                    <Overlay />
-                    <ResultPopup>
-                      <ResultTitle>게임 결과</ResultTitle>
-                      <ResultStats>
-                        <ResultStat>
-                          완료 시간: {formatElapsedTime(gameStats.elapsedTime)}
-                        </ResultStat>
-                        <ResultStat>
-                          평균 정확도: {Math.round(gameStats.averageAccuracy)}%
-                        </ResultStat>
-                        <ResultStat>
-                          최종 타수: {gameStats.typingSpeed}타/분
-                        </ResultStat>
-                        <ResultStat>
-                          난이도: {difficulty === "easy" ? "쉬움" : "어려움"}
-                        </ResultStat>
-                        <ResultStat>
-                          타자 종류: {language === "ko" ? "한글" : "영어"}
-                        </ResultStat>
-                      </ResultStats>
-                      <ResultButton
-                        onClick={() => {
-                          setLanguage(null);
-                          setDifficulty("");
-                          startGame();
-                        }}
-                      >
-                        다시 시작
-                      </ResultButton>
-                    </ResultPopup>
-                  </>
-                )}
-              </>
-            )}
-          </>
-        )}
-      </GameBox>
+      {showResult && (
+        <ResultModal>
+          <ResultContent>
+            <ResultTitle>게임 결과</ResultTitle>
+            <ResultStats>
+              <ResultStatItem>
+                <ResultStatLabel>평균 타수</ResultStatLabel>
+                <ResultStatValue>{gameStats.typingSpeed}타/분</ResultStatValue>
+              </ResultStatItem>
+              <ResultStatItem>
+                <ResultStatLabel>정확도</ResultStatLabel>
+                <ResultStatValue>{gameStats.accuracy}%</ResultStatValue>
+              </ResultStatItem>
+              <ResultStatItem>
+                <ResultStatLabel>걸린 시간</ResultStatLabel>
+                <ResultStatValue>
+                  {formatElapsedTime(gameStats.elapsedTime)}
+                </ResultStatValue>
+              </ResultStatItem>
+            </ResultStats>
+            <ResultButtons>
+              <ResultButton onClick={restartGame}>다시 하기</ResultButton>
+              <ResultButton onClick={() => navigate("/mypage")}>
+                마이페이지
+              </ResultButton>
+            </ResultButtons>
+          </ResultContent>
+        </ResultModal>
+      )}
     </Container>
   );
 };

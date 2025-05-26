@@ -228,12 +228,7 @@ const MyPage = () => {
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return `${
-      date.getMonth() + 1
-    }/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(
-      2,
-      "0"
-    )}`;
+    return `${date.getMonth() + 1}/${date.getDate()}`;
   };
 
   const formatElapsedTime = (seconds) => {
@@ -338,6 +333,7 @@ const MyPage = () => {
         <>
           <ScoreList>
             <ScoreHeader>
+              <div>순서</div>
               <div>날짜</div>
               <div>정확도</div>
               <div>타수</div>
@@ -345,6 +341,7 @@ const MyPage = () => {
             </ScoreHeader>
             {currentStats.scores.map((score, index) => (
               <ScoreItem key={index}>
+                <div>{index + 1}</div>
                 <div>{formatDate(score.date)}</div>
                 <div>{score.accuracy}%</div>
                 <div>{score.typingSpeed}타/분</div>
