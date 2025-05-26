@@ -184,7 +184,6 @@ const TypingGame = () => {
   const [difficulty, setDifficulty] = useState("medium");
   const [currentSentence, setCurrentSentence] = useState("");
   const [userInput, setUserInput] = useState("");
-  const [timeLeft, setTimeLeft] = useState(60);
   const [isGameActive, setIsGameActive] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [scores, setScores] = useState([]);
@@ -196,86 +195,152 @@ const TypingGame = () => {
     typingSpeed: 0,
     totalKeystrokes: 0,
     correctKeystrokes: 0,
+    elapsedTime: 0,
+    completedSentences: 0,
   });
-  const [, setSentenceQueue] = useState([]);
+  const [sentenceQueue, setSentenceQueue] = useState([]);
   const inputRef = useRef(null);
   const startTimeRef = useRef(null);
   const keystrokeTimesRef = useRef([]);
+  const lastKeystrokeTimeRef = useRef(null);
+
+  const formatElapsedTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}분 ${remainingSeconds}초`;
+  };
 
   useEffect(() => {
     let timer;
-    if (isGameActive && timeLeft > 0) {
+    if (isGameActive) {
       timer = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            endGame();
-            return 0;
+        const currentTime = Date.now();
+        const elapsedTime = (currentTime - startTimeRef.current) / 1000;
+
+        if (lastKeystrokeTimeRef.current) {
+          const timeSinceLastKeystroke =
+            (currentTime - lastKeystrokeTimeRef.current) / 1000;
+          if (timeSinceLastKeystroke > 1) {
+            const recentKeystrokes = keystrokeTimesRef.current.filter(
+              (time) => currentTime - time <= 10000
+            ).length;
+
+            const decayFactor = Math.min(timeSinceLastKeystroke / 10, 1);
+            const decayedKeystrokes = Math.floor(
+              recentKeystrokes * (1 - decayFactor)
+            );
+            const typingSpeed = Math.round((decayedKeystrokes / 10) * 60);
+
+            setGameStats((prev) => ({
+              ...prev,
+              typingSpeed,
+              elapsedTime,
+            }));
           }
-          return prev - 1;
-        });
-      }, 1000);
+        }
+
+        setGameStats((prev) => ({
+          ...prev,
+          elapsedTime,
+        }));
+      }, 100);
     }
     return () => {
-      if (timer) {
-        clearInterval(timer);
-      }
+      if (timer) clearInterval(timer);
     };
   }, [isGameActive]);
 
-  // 한글 자모 분리 함수 추가
-  const decomposeHangul = (char) => {
-    const code = char.charCodeAt(0);
-    if (code < 0xac00 || code > 0xd7a3) return [char]; // 한글이 아닌 경우
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+    setUserInput(value);
+    lastKeystrokeTimeRef.current = Date.now();
 
-    const syllable = code - 0xac00;
-    const final = syllable % 28;
-    const medial = ((syllable - final) / 28) % 21;
-    const initial = Math.floor((syllable - final) / 28 / 21);
-
-    const result = [];
-    if (initial > 0) result.push(String.fromCharCode(0x1100 + initial - 1)); // 초성
-    if (medial > 0) result.push(String.fromCharCode(0x1161 + medial - 1)); // 중성
-    if (final > 0) result.push(String.fromCharCode(0x11a7 + final)); // 종성
-
-    return result;
+    if (value.length > userInput.length) {
+      keystrokeTimesRef.current.push(Date.now());
+    }
   };
 
-  // 한글 타수 계산 함수 추가
-  const calculateHangulKeystrokes = (text) => {
-    return text.split("").reduce((count, char) => {
-      return count + decomposeHangul(char).length;
-    }, 0);
-  };
-
-  useEffect(() => {
-    if (isGameActive) {
-      const currentTime = Date.now();
-      const elapsedTime = (currentTime - startTimeRef.current) / 1000;
-
-      // 현재 문장에서 정확한 입력만 필터링
-      const correctInput = userInput
-        .split("")
-        .filter((char, index) => char === currentSentence[index])
-        .join("");
-
-      // 현재 문장의 타수 계산
-      const correctKeystrokes = calculateHangulKeystrokes(correctInput);
-
-      // 최근 10초 동안의 타수 계산
-      const recentKeystrokes = keystrokeTimesRef.current.filter(
-        (time) => currentTime - time <= 10000
-      ).length;
-
-      const typingSpeed = Math.round((recentKeystrokes / 10) * 60); // 10초 동안의 타수를 분당 타수로 변환
+  const handleKeyDown = async (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const accuracy = calculateAccuracy();
+      const words = currentSentence.split(" ").length;
 
       setGameStats((prev) => ({
         ...prev,
-        correctKeystrokes: correctKeystrokes,
-        typingSpeed: typingSpeed,
+        correctWords: prev.correctWords + (accuracy === 100 ? words : 0),
+        averageAccuracy:
+          (prev.averageAccuracy * prev.correctWords + accuracy) /
+          (prev.correctWords + 1),
+        completedSentences: prev.completedSentences + 1,
       }));
+
+      if (gameStats.completedSentences + 1 >= 10) {
+        endGame();
+        return;
+      }
+
+      setSentenceQueue((prevQueue) => {
+        const newQueue = [...prevQueue];
+        newQueue.shift();
+        setCurrentSentence(newQueue[0]);
+        setUserInput("");
+        return newQueue;
+      });
     }
-  }, [userInput, isGameActive, currentSentence]);
+  };
+
+  const startGame = async () => {
+    setIsLoading(true);
+    try {
+      const initialSentences = await fetchAndTranslate30Quotes();
+      setSentenceQueue(initialSentences.slice(0, 10));
+      setCurrentSentence(initialSentences[0]);
+      setUserInput("");
+      setIsGameActive(true);
+      startTimeRef.current = Date.now();
+      lastKeystrokeTimeRef.current = Date.now();
+      keystrokeTimesRef.current = [];
+      setGameStats({
+        correctWords: 0,
+        totalTime: 0,
+        averageAccuracy: 0,
+        typingSpeed: 0,
+        totalKeystrokes: 0,
+        correctKeystrokes: 0,
+        elapsedTime: 0,
+        completedSentences: 0,
+      });
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    } catch (err) {
+      console.error("게임 시작 중 오류 발생:", err);
+      const localSentences = sentences[difficulty].slice(0, 10);
+      setSentenceQueue(localSentences);
+      setCurrentSentence(localSentences[0]);
+      setUserInput("");
+      setIsGameActive(true);
+      startTimeRef.current = Date.now();
+      lastKeystrokeTimeRef.current = Date.now();
+      keystrokeTimesRef.current = [];
+      setGameStats({
+        correctWords: 0,
+        totalTime: 0,
+        averageAccuracy: 0,
+        typingSpeed: 0,
+        totalKeystrokes: 0,
+        correctKeystrokes: 0,
+        elapsedTime: 0,
+        completedSentences: 0,
+      });
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const fetchAndTranslate30Quotes = async () => {
     try {
@@ -303,93 +368,6 @@ const TypingGame = () => {
     }
   };
 
-  const startGame = async () => {
-    setIsLoading(true);
-    try {
-      const initialSentences = await fetchAndTranslate30Quotes();
-      setSentenceQueue(initialSentences);
-      setCurrentSentence(initialSentences[0]);
-      setUserInput("");
-      setTimeLeft(60);
-      setIsGameActive(true);
-      startTimeRef.current = Date.now();
-      keystrokeTimesRef.current = [];
-      setGameStats({
-        correctWords: 0,
-        totalTime: 0,
-        averageAccuracy: 0,
-        typingSpeed: 0,
-        totalKeystrokes: 0,
-        correctKeystrokes: 0,
-      });
-      if (inputRef.current) {
-        inputRef.current.focus();
-      }
-    } catch (err) {
-      console.error("게임 시작 중 오류 발생:", err);
-      const localSentences = sentences[difficulty];
-      setSentenceQueue(localSentences);
-      setCurrentSentence(localSentences[0]);
-      setUserInput("");
-      setTimeLeft(60);
-      setIsGameActive(true);
-      startTimeRef.current = Date.now();
-      keystrokeTimesRef.current = [];
-      setGameStats({
-        correctWords: 0,
-        totalTime: 0,
-        averageAccuracy: 0,
-        typingSpeed: 0,
-        totalKeystrokes: 0,
-        correctKeystrokes: 0,
-      });
-      if (inputRef.current) {
-        inputRef.current.focus();
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleInputChange = (e) => {
-    const value = e.target.value;
-    setUserInput(value);
-
-    // 새로운 키가 입력될 때마다 현재 시간을 배열에 추가
-    if (value.length > userInput.length) {
-      keystrokeTimesRef.current.push(Date.now());
-    }
-  };
-
-  const handleKeyDown = async (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      const accuracy = calculateAccuracy();
-      const words = currentSentence.split(" ").length;
-
-      setGameStats((prev) => ({
-        ...prev,
-        correctWords: prev.correctWords + (accuracy === 100 ? words : 0),
-        averageAccuracy:
-          (prev.averageAccuracy * prev.correctWords + accuracy) /
-          (prev.correctWords + 1),
-      }));
-
-      setSentenceQueue((prevQueue) => {
-        const newQueue = [...prevQueue];
-        newQueue.shift();
-        if (newQueue.length <= 5) {
-          fetchAndTranslate30Quotes().then((moreSentences) => {
-            setSentenceQueue((q) => [...q, ...moreSentences]);
-          });
-        }
-        setCurrentSentence(newQueue[0]);
-        setUserInput("");
-        return newQueue;
-      });
-    }
-  };
-
   const endGame = () => {
     setIsGameActive(false);
     const finalStats = {
@@ -408,7 +386,6 @@ const TypingGame = () => {
       localStorage.setItem("bestScore", finalStats.accuracy);
     }
 
-    // 로컬 스토리지에 점수 저장
     try {
       const currentUser = JSON.parse(localStorage.getItem("currentUser"));
       if (currentUser) {
@@ -503,27 +480,35 @@ const TypingGame = () => {
               </Button>
             </DifficultyButtons>
 
-            <Timer time={timeLeft}>{timeLeft}초</Timer>
-
             {isGameActive && (
-              <GameStats>
-                <StatItem>
-                  <StatLabel>정확도</StatLabel>
-                  <StatValue>
-                    {Math.round(gameStats.averageAccuracy)}%
-                  </StatValue>
-                  <StatDescription>
-                    정확하게 입력한 글자의 비율입니다.
-                  </StatDescription>
-                </StatItem>
-                <StatItem>
-                  <StatLabel>타수</StatLabel>
-                  <StatValue>{gameStats.typingSpeed}타/분</StatValue>
-                  <StatDescription>
-                    한컴타자연습 방식 (자음/모음 각각 1타)
-                  </StatDescription>
-                </StatItem>
-              </GameStats>
+              <>
+                <Timer>
+                  경과 시간: {formatElapsedTime(gameStats.elapsedTime)}
+                </Timer>
+                <GameStats>
+                  <StatItem>
+                    <StatLabel>정확도</StatLabel>
+                    <StatValue>
+                      {Math.round(gameStats.averageAccuracy)}%
+                    </StatValue>
+                    <StatDescription>
+                      정확하게 입력한 글자의 비율입니다.
+                    </StatDescription>
+                  </StatItem>
+                  <StatItem>
+                    <StatLabel>타수</StatLabel>
+                    <StatValue>{gameStats.typingSpeed}타/분</StatValue>
+                    <StatDescription>
+                      한컴타자연습 방식 (자음/모음 각각 1타)
+                    </StatDescription>
+                  </StatItem>
+                  <StatItem>
+                    <StatLabel>진행도</StatLabel>
+                    <StatValue>{gameStats.completedSentences}/10</StatValue>
+                    <StatDescription>완료한 문장 수</StatDescription>
+                  </StatItem>
+                </GameStats>
+              </>
             )}
 
             <TextDisplay>{renderText()}</TextDisplay>
@@ -541,19 +526,19 @@ const TypingGame = () => {
               }
             />
 
-            {!isGameActive && timeLeft === 60 && (
+            {!isGameActive && gameStats.completedSentences === 0 && (
               <Button onClick={startGame}>게임 시작</Button>
             )}
 
-            {!isGameActive && timeLeft === 0 && (
+            {!isGameActive && gameStats.completedSentences >= 10 && (
               <ResultBox>
+                <ScoreText>
+                  완료 시간: {formatElapsedTime(gameStats.elapsedTime)}
+                </ScoreText>
                 <ScoreText>
                   평균 정확도: {Math.round(gameStats.averageAccuracy)}%
                 </ScoreText>
                 <ScoreText>최종 타수: {gameStats.typingSpeed}타/분</ScoreText>
-                <ScoreText>
-                  정확한 입력 수: {gameStats.correctKeystrokes}타
-                </ScoreText>
                 <Button onClick={startGame}>다시 시작</Button>
               </ResultBox>
             )}
