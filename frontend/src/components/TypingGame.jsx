@@ -227,7 +227,7 @@ const TypingGame = () => {
   const [gameStats, setGameStats] = useState({
     correctWords: 0,
     totalTime: 0,
-    averageAccuracy: 0,
+    averageAccuracy: 100,
     typingSpeed: 0,
     totalKeystrokes: 0,
     correctKeystrokes: 0,
@@ -239,6 +239,8 @@ const TypingGame = () => {
     totalChars: 0,
     totalDecomposedInput: "",
     totalDecomposedTarget: "",
+    totalErrors: 0,
+    totalKeystrokes: 0,
   });
   const [_remainingSentences, setRemainingSentences] = useState([]);
   const inputRef = useRef(null);
@@ -376,37 +378,25 @@ const TypingGame = () => {
 
       if (language === "ko") {
         // 한글 타자의 경우 새로운 정확도 계산 방식 사용
-        const currentAccuracy = calculateHangulAccuracy(value, content);
+        const isCorrect = newChar === content[value.length - 1];
 
-        // 전체 자모 누적
         setGameStats((prev) => {
-          const newDecomposedInput = (
-            prev.totalDecomposedInput + value
-          ).normalize("NFD");
-          const newDecomposedTarget = (
-            prev.totalDecomposedTarget + content
-          ).normalize("NFD");
+          const newTotalKeystrokes = prev.totalKeystrokes + 1;
+          const newTotalErrors = isCorrect
+            ? prev.totalErrors
+            : prev.totalErrors + 1;
 
-          let totalCorrectCount = 0;
-          const minLength = Math.min(
-            newDecomposedInput.length,
-            newDecomposedTarget.length
+          // 정확도 계산: 100 - (오타 수 / 총 키 입력 수 * 100)
+          const newAccuracy = Math.max(
+            0,
+            100 - (newTotalErrors / newTotalKeystrokes) * 100
           );
-
-          for (let i = 0; i < minLength; i++) {
-            if (newDecomposedInput[i] === newDecomposedTarget[i]) {
-              totalCorrectCount++;
-            }
-          }
-
-          const totalAccuracy =
-            (totalCorrectCount / newDecomposedTarget.length) * 100;
 
           return {
             ...prev,
-            totalDecomposedInput: newDecomposedInput,
-            totalDecomposedTarget: newDecomposedTarget,
-            averageAccuracy: Math.round(totalAccuracy * 100) / 100,
+            totalKeystrokes: newTotalKeystrokes,
+            totalErrors: newTotalErrors,
+            averageAccuracy: Math.round(newAccuracy * 100) / 100,
           };
         });
       } else {
@@ -501,7 +491,7 @@ const TypingGame = () => {
       setGameStats({
         correctWords: 0,
         totalTime: 0,
-        averageAccuracy: 0,
+        averageAccuracy: 100,
         typingSpeed: 0,
         totalKeystrokes: 0,
         correctKeystrokes: 0,
@@ -513,6 +503,8 @@ const TypingGame = () => {
         totalChars: 0,
         totalDecomposedInput: "",
         totalDecomposedTarget: "",
+        totalErrors: 0,
+        totalKeystrokes: 0,
       });
       if (inputRef.current) {
         inputRef.current.focus();
@@ -530,7 +522,7 @@ const TypingGame = () => {
       setGameStats({
         correctWords: 0,
         totalTime: 0,
-        averageAccuracy: 0,
+        averageAccuracy: 100,
         typingSpeed: 0,
         totalKeystrokes: 0,
         correctKeystrokes: 0,
@@ -542,6 +534,8 @@ const TypingGame = () => {
         totalChars: 0,
         totalDecomposedInput: "",
         totalDecomposedTarget: "",
+        totalErrors: 0,
+        totalKeystrokes: 0,
       });
       if (inputRef.current) {
         inputRef.current.focus();
@@ -693,7 +687,7 @@ const TypingGame = () => {
     setGameStats({
       correctWords: 0,
       totalTime: 0,
-      averageAccuracy: 0,
+      averageAccuracy: 100,
       typingSpeed: 0,
       totalKeystrokes: 0,
       correctKeystrokes: 0,
@@ -705,6 +699,8 @@ const TypingGame = () => {
       totalChars: 0,
       totalDecomposedInput: "",
       totalDecomposedTarget: "",
+      totalErrors: 0,
+      totalKeystrokes: 0,
     });
     setRemainingSentences([]);
   };
