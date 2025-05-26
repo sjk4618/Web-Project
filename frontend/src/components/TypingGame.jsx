@@ -214,8 +214,12 @@ const TypingGame = () => {
         });
       }, 1000);
     }
-    return () => clearInterval(timer);
-  }, [isGameActive, timeLeft]);
+    return () => {
+      if (timer) {
+        clearInterval(timer);
+      }
+    };
+  }, [isGameActive]);
 
   useEffect(() => {
     if (isGameActive) {
