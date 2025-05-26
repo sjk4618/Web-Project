@@ -347,7 +347,7 @@ const TypingGame = () => {
     const currentAccuracy = calculateAccuracy();
     setGameStats((prev) => ({
       ...prev,
-      averageAccuracy: currentAccuracy,
+      averageAccuracy: prev.averageAccuracy, // 이전 정확도 유지
     }));
   };
 
