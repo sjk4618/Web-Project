@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
-import { ENGLISH_QUOTES } from "../constants/englishQuotes";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
