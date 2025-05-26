@@ -31,7 +31,7 @@ const Container = styled.div`
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 `;
 
-const Title = styled.h2`
+const MyPageTitle = styled.h2`
   text-align: center;
   margin-bottom: 2rem;
   color: #333;
@@ -298,7 +298,7 @@ const MyPage = () => {
 
   return (
     <Container>
-      <Title>마이페이지</Title>
+      <MyPageTitle>마이페이지</MyPageTitle>
 
       <StatsGrid>
         <StatCard>
