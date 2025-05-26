@@ -316,15 +316,11 @@ const TypingGame = () => {
           typingSpeed = Math.round((recentKeystrokes / 10) * 60);
         }
 
-        // 실시간 정확도 계산
-        const currentAccuracy = calculateAccuracy();
-
         setGameStats((prev) => ({
           ...prev,
           correctKeystrokes,
           typingSpeed,
           elapsedTime,
-          averageAccuracy: currentAccuracy,
         }));
       }, 100);
     }
@@ -346,6 +342,13 @@ const TypingGame = () => {
         keystrokeTimesRef.current.push(Date.now());
       }
     }
+
+    // 실시간 정확도 계산
+    const currentAccuracy = calculateAccuracy();
+    setGameStats((prev) => ({
+      ...prev,
+      averageAccuracy: currentAccuracy,
+    }));
   };
 
   const handleKeyDown = async (e) => {
@@ -364,9 +367,7 @@ const TypingGame = () => {
         completedSentences: prev.completedSentences + 1,
         totalAccuracy: prev.totalAccuracy + currentAccuracy,
         totalInputs: prev.totalInputs + 1,
-        averageAccuracy: Math.round(
-          (prev.totalAccuracy + currentAccuracy) / (prev.totalInputs + 1)
-        ),
+        averageAccuracy: currentAccuracy,
       }));
 
       if (gameStats.completedSentences + 1 >= 10) {
@@ -381,12 +382,6 @@ const TypingGame = () => {
         setUserInput("");
         return newSentences;
       });
-
-      // 다음 문장으로 넘어갈 때 정확도 유지
-      setGameStats((prev) => ({
-        ...prev,
-        averageAccuracy: prev.averageAccuracy,
-      }));
     }
   };
 
