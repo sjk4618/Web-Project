@@ -140,6 +140,44 @@ const LoadingView = styled.div`
   padding: 2rem;
   font-size: 1.2rem;
   color: #666;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  min-width: 300px;
+`;
+
+const LoadingSpinner = styled.div`
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #4caf50;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+`;
+
+const LoadingText = styled.div`
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+`;
+
+const LoadingSubText = styled.div`
+  font-size: 0.9rem;
+  color: #888;
 `;
 
 const TypingGame = () => {
@@ -397,11 +435,13 @@ const TypingGame = () => {
       <GameBox>
         {isLoading ? (
           <LoadingView>
-            <TextDisplay>
-              명언을 받아오고 있습니다...
+            <LoadingSpinner />
+            <LoadingText>게임 준비 중...</LoadingText>
+            <LoadingSubText>
+              명언을 받아오고 번역하는 중입니다.
               <br />
               잠시만 기다려주세요.
-            </TextDisplay>
+            </LoadingSubText>
           </LoadingView>
         ) : (
           <>
