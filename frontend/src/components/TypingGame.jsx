@@ -505,15 +505,6 @@ const TypingGame = () => {
           return;
         }
 
-        // 게임 통계 업데이트
-        setGameStats((prev) => ({
-          ...prev,
-          correctWords:
-            prev.correctWords + (currentAccuracy === 100 ? words : 0),
-          completedSentences: currentProgress,
-          totalInputs: prev.totalInputs + 1,
-        }));
-
         // 다음 문장으로 이동
         setRemainingSentences((prev) => {
           const newSentences = [...prev];
@@ -522,6 +513,15 @@ const TypingGame = () => {
           setUserInput("");
           return newSentences;
         });
+
+        // 게임 통계 업데이트
+        setGameStats((prev) => ({
+          ...prev,
+          correctWords:
+            prev.correctWords + (currentAccuracy === 100 ? words : 0),
+          completedSentences: currentProgress,
+          totalInputs: prev.totalInputs + 1,
+        }));
       }
     } catch (err) {
       console.error("키 입력 처리 중 오류 발생:", err);
@@ -684,6 +684,8 @@ const TypingGame = () => {
       typeof currentSentence === "object"
         ? currentSentence.content
         : currentSentence;
+    const author =
+      typeof currentSentence === "object" ? currentSentence.author : null;
 
     return (
       <>
@@ -698,6 +700,11 @@ const TypingGame = () => {
             </span>
           );
         })}
+        {author && (
+          <div style={{ color: "#666", marginTop: "0.5rem", fontSize: "1rem" }}>
+            - {author}
+          </div>
+        )}
         <div style={{ color: "#666", marginTop: "0.5rem", fontSize: "0.9rem" }}>
           ※ 작가 이름은 입력하지 않으셔도 됩니다.
         </div>
