@@ -16,6 +16,46 @@ const Title = styled.h2`
   color: #333;
 `;
 
+const LanguageSelector = styled.div`
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+`;
+
+const LanguageButton = styled.button`
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 5px;
+  background-color: ${(props) => (props.active ? "#4CAF50" : "#ddd")};
+  color: ${(props) => (props.active ? "white" : "#333")};
+  cursor: pointer;
+  font-size: 1rem;
+
+  &:hover {
+    background-color: ${(props) => (props.active ? "#45a049" : "#ccc")};
+  }
+`;
+
+const DifficultySelector = styled.div`
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+`;
+
+const DifficultyButton = styled(LanguageButton)``;
+
+const ScoreExplanation = styled.div`
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 5px;
+  margin-bottom: 2rem;
+  font-size: 0.9rem;
+  color: #666;
+  line-height: 1.5;
+`;
+
 const RankingList = styled.div`
   margin-top: 2rem;
 `;
@@ -82,37 +122,6 @@ const Time = styled.div`
 
 const Difficulty = styled.div`
   color: #666;
-`;
-
-const LanguageSelector = styled.div`
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-  margin-bottom: 2rem;
-`;
-
-const LanguageButton = styled.button`
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 5px;
-  background-color: ${(props) => (props.active ? "#4CAF50" : "#ddd")};
-  color: ${(props) => (props.active ? "white" : "#333")};
-  cursor: pointer;
-  font-size: 1rem;
-
-  &:hover {
-    background-color: ${(props) => (props.active ? "#45a049" : "#ccc")};
-  }
-`;
-
-const ScoreExplanation = styled.div`
-  background: #f8f9fa;
-  padding: 1rem;
-  border-radius: 5px;
-  margin-bottom: 2rem;
-  font-size: 0.9rem;
-  color: #666;
-  line-height: 1.5;
 `;
 
 const Ranking = () => {

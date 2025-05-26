@@ -54,9 +54,19 @@ const StartMessage = styled.div`
 
 const StartButton = styled(LanguageButton)`
   display: block;
-  margin: 0 auto;
+  margin: 1rem auto;
   padding: 0.8rem 2rem;
   font-size: 1.1rem;
+  background-color: ${(props) =>
+    props.disabled ? "#ccc" : props.active ? "#4CAF50" : "#ddd"};
+  cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
+  opacity: ${(props) => (props.disabled ? 0.7 : 1)};
+  transition: all 0.3s ease;
+
+  &:hover {
+    background-color: ${(props) =>
+      props.disabled ? "#ccc" : props.active ? "#45a049" : "#ccc"};
+  }
 `;
 
 const GameContainer = styled.div`
@@ -787,7 +797,13 @@ const TypingGame = () => {
               어려움
             </DifficultyButton>
           </DifficultySelector>
-          <StartButton onClick={startGame}>게임 시작</StartButton>
+          <StartButton
+            onClick={startGame}
+            disabled={!selectedLanguage || !selectedDifficulty}
+            active={selectedLanguage && selectedDifficulty}
+          >
+            게임 시작
+          </StartButton>
         </>
       )}
 
