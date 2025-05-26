@@ -818,7 +818,7 @@ const TypingGame = () => {
             </StatItem>
             <StatItem>
               <StatLabel>진행도</StatLabel>
-              <StatValue>{gameStats.completedSentences + 1}/10</StatValue>
+              <StatValue>{gameStats.completedSentences}/10</StatValue>
             </StatItem>
           </StatsContainer>
         </>
