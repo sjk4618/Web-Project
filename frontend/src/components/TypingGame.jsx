@@ -273,10 +273,10 @@ const TypingGame = () => {
       const newQueue = [...sentenceQueue];
       newQueue.shift(); // 현재 문장 제거
 
-      // 문장이 5개 이하로 남으면 10개 더 받아와서 추가
+      // 문장이 5개 이하로 남으면 10개 더 받아와서 큐 맨 뒤에만 추가
       if (newQueue.length <= 5) {
         const moreSentences = await fetchAndTranslate10Quotes();
-        newQueue.push(...moreSentences);
+        setSentenceQueue((prev) => [...prev, ...moreSentences]);
       }
 
       setSentenceQueue(newQueue);
