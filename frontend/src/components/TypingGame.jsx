@@ -192,7 +192,6 @@ const TypingGame = () => {
   }, [isGameActive, timeLeft, userInput]);
 
   const fetchAndTranslate30Quotes = async () => {
-    setIsLoading(true);
     try {
       const res = await axios.get("/api/quotes?limit=30");
       const quotes = res.data.results.map((item) => item.content);
@@ -211,11 +210,9 @@ const TypingGame = () => {
           }
         })
       );
-      setIsLoading(false);
       return translated;
     } catch (err) {
       console.error("Quote API 에러 발생:", err);
-      setIsLoading(false);
       return ENGLISH_QUOTES.slice(0, 30);
     }
   };
@@ -398,29 +395,6 @@ const TypingGame = () => {
   return (
     <Container>
       <GameBox>
-        <DifficultyButtons>
-          <Button
-            active={difficulty === "easy"}
-            onClick={() => setDifficulty("easy")}
-          >
-            쉬움
-          </Button>
-          <Button
-            active={difficulty === "medium"}
-            onClick={() => setDifficulty("medium")}
-          >
-            보통
-          </Button>
-          <Button
-            active={difficulty === "hard"}
-            onClick={() => setDifficulty("hard")}
-          >
-            어려움
-          </Button>
-        </DifficultyButtons>
-
-        <Timer time={timeLeft}>{timeLeft}초</Timer>
-
         {isLoading ? (
           <LoadingView>
             <TextDisplay>
@@ -431,6 +405,29 @@ const TypingGame = () => {
           </LoadingView>
         ) : (
           <>
+            <DifficultyButtons>
+              <Button
+                active={difficulty === "easy"}
+                onClick={() => setDifficulty("easy")}
+              >
+                쉬움
+              </Button>
+              <Button
+                active={difficulty === "medium"}
+                onClick={() => setDifficulty("medium")}
+              >
+                보통
+              </Button>
+              <Button
+                active={difficulty === "hard"}
+                onClick={() => setDifficulty("hard")}
+              >
+                어려움
+              </Button>
+            </DifficultyButtons>
+
+            <Timer time={timeLeft}>{timeLeft}초</Timer>
+
             {isGameActive && (
               <GameStats>
                 <StatItem>
