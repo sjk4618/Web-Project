@@ -89,9 +89,8 @@ const MyPage = () => {
       const users = JSON.parse(localStorage.getItem("users") || "[]");
       const user = users.find((u) => u.username === currentUser.username);
 
-      if (user && user.scores) {
+      if (user && Array.isArray(user.scores)) {
         const scores = user.scores;
-
         // 한글/영어 타자 기록 분리
         const koScores = scores.filter((score) => score.language === "ko");
         const enScores = scores.filter((score) => score.language === "en");
@@ -144,6 +143,21 @@ const MyPage = () => {
             scores: enScores.sort(
               (a, b) => new Date(b.date) - new Date(a.date)
             ),
+          },
+        });
+      } else {
+        setUserStats({
+          koStats: {
+            averageAccuracy: 0,
+            averageSpeed: 0,
+            totalGames: 0,
+            scores: [],
+          },
+          enStats: {
+            averageAccuracy: 0,
+            averageSpeed: 0,
+            totalGames: 0,
+            scores: [],
           },
         });
       }

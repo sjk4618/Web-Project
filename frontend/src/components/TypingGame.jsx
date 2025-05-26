@@ -172,7 +172,7 @@ const LanguageButtons = styled.div`
 `;
 
 const TypingGame = () => {
-  const [difficulty, setDifficulty] = useState("medium");
+  const [difficulty, setDifficulty] = useState("");
   const [language, setLanguage] = useState(null); // 'ko' 또는 'en'
   const [currentSentence, setCurrentSentence] = useState("");
   const [userInput, setUserInput] = useState("");
@@ -297,7 +297,7 @@ const TypingGame = () => {
   };
 
   const handleKeyDown = async (e) => {
-    if (e.key === "Enter") {
+    if (e.key === "Enter" && isGameActive) {
       e.preventDefault();
       const accuracy = calculateAccuracy();
       const words = currentSentence.split(" ").length;
@@ -519,6 +519,29 @@ const TypingGame = () => {
     );
   };
 
+  // 게임 상태 초기화 함수 (상단 탭에서 진입 시 호출)
+  const resetGame = () => {
+    setLanguage(null);
+    setDifficulty("");
+    setCurrentSentence("");
+    setUserInput("");
+    setIsGameActive(false);
+    setIsLoading(false);
+    setScores([]);
+    setBestScore(0);
+    setGameStats({
+      correctWords: 0,
+      totalTime: 0,
+      averageAccuracy: 0,
+      typingSpeed: 0,
+      totalKeystrokes: 0,
+      correctKeystrokes: 0,
+      elapsedTime: 0,
+      completedSentences: 0,
+    });
+    setRemainingSentences([]);
+  };
+
   return (
     <Container>
       <GameBox>
@@ -624,7 +647,9 @@ const TypingGame = () => {
                 />
 
                 {!isGameActive && gameStats.completedSentences === 0 && (
-                  <Button onClick={startGame}>게임 시작</Button>
+                  <Button onClick={startGame} disabled={!difficulty}>
+                    게임 시작
+                  </Button>
                 )}
 
                 {!isGameActive && gameStats.completedSentences >= 10 && (
