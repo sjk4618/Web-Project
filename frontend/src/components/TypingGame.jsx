@@ -190,9 +190,10 @@ const TypingGame = () => {
       const res = await axios.get("/api/quotes");
       const quoteList = res.data.results.map((item) => item.content);
 
-      // 번역도 nginx 프록시를 통해 요청
-      const translatedQuotes = await Promise.all(
-        quoteList.map(async (quote) => {
+      // 처음 10개의 명언만 먼저 번역
+      const initialQuotes = quoteList.slice(0, 10);
+      const translatedInitialQuotes = await Promise.all(
+        initialQuotes.map(async (quote) => {
           try {
             const response = await axios.post("/api/translate", {
               text: quote,
@@ -207,7 +208,31 @@ const TypingGame = () => {
         })
       );
 
-      return translatedQuotes;
+      // 나머지 40개의 명언은 비동기적으로 번역
+      const remainingQuotes = quoteList.slice(10);
+      Promise.all(
+        remainingQuotes.map(async (quote) => {
+          try {
+            const response = await axios.post("/api/translate", {
+              text: quote,
+              source: "en",
+              target: "ko",
+            });
+            return response.data.translatedText;
+          } catch (err) {
+            console.error("번역 중 오류:", err);
+            return quote; // 번역 실패 시 원문 반환
+          }
+        })
+      ).then((translatedRemainingQuotes) => {
+        // 번역이 완료된 나머지 명언들을 sentenceQueue에 추가
+        setSentenceQueue((prevQueue) => [
+          ...prevQueue,
+          ...translatedRemainingQuotes,
+        ]);
+      });
+
+      return translatedInitialQuotes;
     } catch (err) {
       console.error("Quote API 에러 발생:", err);
       // 실패 시 기본 문장들 반환
@@ -218,10 +243,14 @@ const TypingGame = () => {
   const getRandomSentences = async (count = 10) => {
     const quotes = await fetchQuotes();
     const randomSentences = [];
-    for (let i = 0; i < count; i++) {
-      const randomIndex = Math.floor(Math.random() * quotes.length);
-      randomSentences.push(quotes[randomIndex]);
+    const availableQuotes = [...quotes];
+
+    for (let i = 0; i < count && availableQuotes.length > 0; i++) {
+      const randomIndex = Math.floor(Math.random() * availableQuotes.length);
+      randomSentences.push(availableQuotes[randomIndex]);
+      availableQuotes.splice(randomIndex, 1); // 이미 선택된 문장은 제거
     }
+
     return randomSentences;
   };
 
