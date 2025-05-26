@@ -141,6 +141,7 @@ const TypingGame = () => {
   const [userInput, setUserInput] = useState("");
   const [timeLeft, setTimeLeft] = useState(60);
   const [isGameActive, setIsGameActive] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [scores, setScores] = useState([]);
   const [bestScore, setBestScore] = useState(0);
   const [gameStats, setGameStats] = useState({
@@ -183,9 +184,10 @@ const TypingGame = () => {
     return () => clearInterval(timer);
   }, [isGameActive, timeLeft, userInput]);
 
-  const fetchAndTranslate10Quotes = async () => {
+  const fetchAndTranslate30Quotes = async () => {
+    setIsLoading(true);
     try {
-      const res = await axios.get("/api/quotes?limit=10");
+      const res = await axios.get("/api/quotes?limit=30");
       const quotes = res.data.results.map((item) => item.content);
       const translated = await Promise.all(
         quotes.map(async (quote) => {
@@ -202,16 +204,18 @@ const TypingGame = () => {
           }
         })
       );
+      setIsLoading(false);
       return translated;
     } catch (err) {
       console.error("Quote API 에러 발생:", err);
-      return ENGLISH_QUOTES.slice(0, 10);
+      setIsLoading(false);
+      return ENGLISH_QUOTES.slice(0, 30);
     }
   };
 
   const startGame = async () => {
     try {
-      const initialSentences = await fetchAndTranslate10Quotes();
+      const initialSentences = await fetchAndTranslate30Quotes();
       setSentenceQueue(initialSentences);
       setCurrentSentence(initialSentences[0]);
       setUserInput("");
@@ -274,7 +278,7 @@ const TypingGame = () => {
         newQueue.shift();
         // 만약 5개 이하라면, 새 문장 받아와서 뒤에 붙임 (비동기)
         if (newQueue.length <= 5) {
-          fetchAndTranslate10Quotes().then((moreSentences) => {
+          fetchAndTranslate30Quotes().then((moreSentences) => {
             setSentenceQueue((q) => [...q, ...moreSentences]);
           });
         }
@@ -407,7 +411,9 @@ const TypingGame = () => {
 
         <Timer time={timeLeft}>{timeLeft}초</Timer>
 
-        {isGameActive && (
+        {isLoading && <TextDisplay>명언을 받아오고 있습니다...</TextDisplay>}
+
+        {!isLoading && isGameActive && (
           <GameStats>
             <StatItem>
               <StatLabel>현재 WPM</StatLabel>
