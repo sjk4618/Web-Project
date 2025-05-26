@@ -276,6 +276,28 @@ const TypingGame = () => {
     }, 0);
   };
 
+  const calculateHangulAccuracy = (input, target) => {
+    if (!input || !target) return 0;
+
+    // NFD 정규화를 사용하여 자모 분해
+    const decomposedInput = input.normalize("NFD");
+    const decomposedTarget = target.normalize("NFD");
+
+    let correctCount = 0;
+    const minLength = Math.min(decomposedInput.length, decomposedTarget.length);
+
+    // 자모 단위로 비교
+    for (let i = 0; i < minLength; i++) {
+      if (decomposedInput[i] === decomposedTarget[i]) {
+        correctCount++;
+      }
+    }
+
+    // 정확도 계산 (소수점 둘째 자리까지)
+    const accuracy = (correctCount / decomposedTarget.length) * 100;
+    return Math.round(accuracy * 100) / 100;
+  };
+
   useEffect(() => {
     resetGame();
   }, []);
@@ -349,28 +371,17 @@ const TypingGame = () => {
         typeof currentSentence === "object"
           ? currentSentence.content
           : currentSentence;
-      const isCorrect = newChar === content[value.length - 1];
 
-      // 한글 타자의 경우 자모 분리하여 정확도 계산
       if (language === "ko") {
-        const correctDecomposed = decomposeHangul(content[value.length - 1]);
-        const inputDecomposed = decomposeHangul(newChar);
-        const correctCount = inputDecomposed.filter(
-          (char, idx) => char === correctDecomposed[idx]
-        ).length;
-
+        // 한글 타자의 경우 새로운 정확도 계산 방식 사용
+        const currentAccuracy = calculateHangulAccuracy(value, content);
         setGameStats((prev) => ({
           ...prev,
-          totalCorrectChars: prev.totalCorrectChars + correctCount,
-          totalChars: prev.totalChars + correctDecomposed.length,
-          averageAccuracy: Math.round(
-            ((prev.totalCorrectChars + correctCount) /
-              (prev.totalChars + correctDecomposed.length)) *
-              100
-          ),
+          averageAccuracy: currentAccuracy,
         }));
       } else {
         // 영어 타자는 기존 방식대로 계산
+        const isCorrect = newChar === content[value.length - 1];
         setGameStats((prev) => ({
           ...prev,
           totalCorrectChars: prev.totalCorrectChars + (isCorrect ? 1 : 0),
@@ -393,7 +404,14 @@ const TypingGame = () => {
           ? currentSentence.content.split(" ").length
           : currentSentence.split(" ").length;
 
-      const currentAccuracy = calculateAccuracy();
+      const content =
+        typeof currentSentence === "object"
+          ? currentSentence.content
+          : currentSentence;
+      const currentAccuracy =
+        language === "ko"
+          ? calculateHangulAccuracy(userInput, content)
+          : calculateAccuracy();
 
       setGameStats((prev) => ({
         ...prev,
