@@ -1,67 +1,8 @@
 import React, { useState } from "react";
-import styled from "styled-components";
+import { useUserStore } from "../store/useUserStore";
 
-const Container = styled.div`
-  max-width: 400px;
-  margin: 2rem auto;
-  padding: 2rem;
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-`;
-
-const Form = styled.form`
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-`;
-
-const Input = styled.input`
-  padding: 0.8rem;
-  border: 2px solid #ddd;
-  border-radius: 5px;
-  font-size: 1rem;
-
-  &:focus {
-    outline: none;
-    border-color: #4caf50;
-  }
-`;
-
-const Button = styled.button`
-  padding: 0.8rem;
-  background-color: #4caf50;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  font-size: 1rem;
-  cursor: pointer;
-
-  &:hover {
-    background-color: #45a049;
-  }
-`;
-
-const ToggleButton = styled.button`
-  background: none;
-  border: none;
-  color: #4caf50;
-  cursor: pointer;
-  margin-top: 1rem;
-  font-size: 0.9rem;
-
-  &:hover {
-    text-decoration: underline;
-  }
-`;
-
-const ErrorMessage = styled.p`
-  color: #ff4444;
-  margin: 0;
-  font-size: 0.9rem;
-`;
-
-const Auth = ({ onLogin }) => {
+const Auth = () => {
+  const setUser = useUserStore((state) => state.setUser);
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
     username: "",
@@ -104,11 +45,11 @@ const Auth = ({ onLogin }) => {
           "currentUser",
           JSON.stringify({
             username: user.username,
-            token: Math.random().toString(36).substring(7), // 간단한 토큰 생성
+            token: Math.random().toString(36).substring(7),
           })
         );
 
-        onLogin({ username: user.username });
+        setUser({ username: user.username });
       } else {
         // 회원가입
         if (users.some((u) => u.username === formData.username)) {
@@ -133,7 +74,7 @@ const Auth = ({ onLogin }) => {
           })
         );
 
-        onLogin({ username: newUser.username });
+        setUser({ username: newUser.username });
       }
     } catch (err) {
       setError(err.message);
@@ -141,40 +82,51 @@ const Auth = ({ onLogin }) => {
   };
 
   return (
-    <Container>
-      <h2>{isLogin ? "로그인" : "회원가입"}</h2>
-      <Form onSubmit={handleSubmit}>
-        <Input
+    <div className="max-w-md mx-auto my-8 p-8 bg-white rounded-xl shadow-lg">
+      <h2 className="text-2xl font-bold mb-6 text-center">
+        {isLogin ? "로그인" : "회원가입"}
+      </h2>
+      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+        <input
           type="text"
           name="username"
           placeholder="사용자 이름"
           value={formData.username}
           onChange={handleChange}
           required
+          className="p-3 border-2 border-gray-200 rounded focus:outline-none focus:border-green-500 text-base"
         />
-        <Input
+        <input
           type="password"
           name="password"
           placeholder="비밀번호"
           value={formData.password}
           onChange={handleChange}
           required
+          className="p-3 border-2 border-gray-200 rounded focus:outline-none focus:border-green-500 text-base"
         />
         {!isLogin && (
-          <Input
+          <input
             type="password"
             name="confirmPassword"
             placeholder="비밀번호 확인"
             value={formData.confirmPassword}
             onChange={handleChange}
             required
+            className="p-3 border-2 border-gray-200 rounded focus:outline-none focus:border-green-500 text-base"
           />
         )}
-        {error && <ErrorMessage>{error}</ErrorMessage>}
-        <Button type="submit">{isLogin ? "로그인" : "회원가입"}</Button>
-      </Form>
-      <ToggleButton
+        {error && <p className="text-red-500 text-sm m-0">{error}</p>}
+        <button
+          type="submit"
+          className="p-3 bg-green-500 text-white rounded text-base font-semibold hover:bg-green-600 transition-colors"
+        >
+          {isLogin ? "로그인" : "회원가입"}
+        </button>
+      </form>
+      <button
         type="button"
+        className="mt-4 text-green-500 text-sm hover:underline focus:outline-none bg-transparent"
         onClick={() => {
           setIsLogin(!isLogin);
           setError("");
@@ -188,8 +140,8 @@ const Auth = ({ onLogin }) => {
         {isLogin
           ? "계정이 없으신가요? 회원가입"
           : "이미 계정이 있으신가요? 로그인"}
-      </ToggleButton>
-    </Container>
+      </button>
+    </div>
   );
 };
 

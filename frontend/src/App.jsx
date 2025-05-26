@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -11,6 +11,7 @@ import TypingGame from "./components/TypingGame";
 import Auth from "./components/Auth";
 import Ranking from "./components/Ranking";
 import MyPage from "./components/MyPage";
+import { useUserStore } from "./store/useUserStore";
 
 const AppContainer = styled.div`
   min-height: 100vh;
@@ -70,23 +71,16 @@ const NavLink = styled(Link)`
 `;
 
 function App() {
-  const [user, setUser] = useState(null);
+  const user = useUserStore((state) => state.user);
+  const setUser = useUserStore((state) => state.setUser);
+  const logout = useUserStore((state) => state.logout);
 
   useEffect(() => {
     const currentUser = JSON.parse(localStorage.getItem("currentUser"));
     if (currentUser) {
       setUser({ username: currentUser.username });
     }
-  }, []);
-
-  const handleLogin = (userData) => {
-    setUser(userData);
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("currentUser");
-    setUser(null);
-  };
+  }, [setUser]);
 
   return (
     <Router>
@@ -101,7 +95,7 @@ function App() {
                   <NavLink to="/">게임</NavLink>
                   <NavLink to="/ranking">랭킹</NavLink>
                   <NavLink to="/mypage">마이페이지</NavLink>
-                  <Button onClick={handleLogout}>로그아웃</Button>
+                  <Button onClick={logout}>로그아웃</Button>
                 </UserInfo>
               </>
             ) : (
@@ -115,19 +109,11 @@ function App() {
         <Routes>
           <Route
             path="/"
-            element={
-              user ? (
-                <TypingGame onReset={() => window.location.reload()} />
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
+            element={user ? <TypingGame /> : <Navigate to="/login" />}
           />
           <Route
             path="/login"
-            element={
-              user ? <Navigate to="/" /> : <Auth onLogin={handleLogin} />
-            }
+            element={user ? <Navigate to="/" /> : <Auth />}
           />
           <Route
             path="/ranking"
