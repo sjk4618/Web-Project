@@ -198,13 +198,6 @@ const MyPage = () => {
       }),
     datasets: [
       {
-        label: "한글 타자 정확도 (%)",
-        data: userStats.koStats.scores.map((score) => score.accuracy),
-        borderColor: "#2196F3",
-        tension: 0.1,
-        yAxisID: "y",
-      },
-      {
         label: "한글 타자 속도 (타/분)",
         data: userStats.koStats.scores.map((score) => score.typingSpeed),
         borderColor: "#4CAF50",
@@ -217,13 +210,6 @@ const MyPage = () => {
         borderColor: "#9C27B0",
         tension: 0.1,
         yAxisID: "y2",
-      },
-      {
-        label: "영어 타자 정확도 (%)",
-        data: userStats.enStats.scores.map((score) => score.accuracy),
-        borderColor: "#FF9800",
-        tension: 0.1,
-        yAxisID: "y",
       },
       {
         label: "영어 타자 속도 (타/분)",
@@ -249,29 +235,15 @@ const MyPage = () => {
       intersect: false,
     },
     scales: {
-      y: {
+      y1: {
         type: "linear",
         display: true,
         position: "left",
         title: {
           display: true,
-          text: "정확도 (%)",
-        },
-        min: 0,
-        max: 100,
-      },
-      y1: {
-        type: "linear",
-        display: true,
-        position: "right",
-        title: {
-          display: true,
           text: "타수 (타/분)",
         },
         min: 0,
-        grid: {
-          drawOnChartArea: false,
-        },
       },
       y2: {
         type: "linear",

@@ -171,6 +171,50 @@ const LanguageButtons = styled.div`
   margin-top: 1rem;
 `;
 
+const ResultPopup = styled.div`
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  min-width: 300px;
+  text-align: center;
+`;
+
+const Overlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+`;
+
+const ResultTitle = styled.h2`
+  color: #333;
+  margin-bottom: 1.5rem;
+`;
+
+const ResultStats = styled.div`
+  margin-bottom: 1.5rem;
+`;
+
+const ResultStat = styled.div`
+  font-size: 1.2rem;
+  margin: 0.5rem 0;
+  color: #666;
+`;
+
+const ResultButton = styled(Button)`
+  margin-top: 1rem;
+  width: 100%;
+`;
+
 const TypingGame = () => {
   const [difficulty, setDifficulty] = useState("");
   const [language, setLanguage] = useState(null); // 'ko' 또는 'en'
@@ -672,25 +716,37 @@ const TypingGame = () => {
                 )}
 
                 {!isGameActive && gameStats.completedSentences >= 10 && (
-                  <ResultBox>
-                    <ScoreText>
-                      완료 시간: {formatElapsedTime(gameStats.elapsedTime)}
-                    </ScoreText>
-                    <ScoreText>
-                      평균 정확도: {Math.round(gameStats.averageAccuracy)}%
-                    </ScoreText>
-                    <ScoreText>
-                      최종 타수: {gameStats.typingSpeed}타/분
-                    </ScoreText>
-                    <Button
-                      onClick={() => {
-                        setLanguage(null);
-                        startGame();
-                      }}
-                    >
-                      다시 시작
-                    </Button>
-                  </ResultBox>
+                  <>
+                    <Overlay />
+                    <ResultPopup>
+                      <ResultTitle>게임 결과</ResultTitle>
+                      <ResultStats>
+                        <ResultStat>
+                          완료 시간: {formatElapsedTime(gameStats.elapsedTime)}
+                        </ResultStat>
+                        <ResultStat>
+                          평균 정확도: {Math.round(gameStats.averageAccuracy)}%
+                        </ResultStat>
+                        <ResultStat>
+                          최종 타수: {gameStats.typingSpeed}타/분
+                        </ResultStat>
+                        <ResultStat>
+                          난이도: {difficulty === "easy" ? "쉬움" : "어려움"}
+                        </ResultStat>
+                        <ResultStat>
+                          타자 종류: {language === "ko" ? "한글" : "영어"}
+                        </ResultStat>
+                      </ResultStats>
+                      <ResultButton
+                        onClick={() => {
+                          setLanguage(null);
+                          startGame();
+                        }}
+                      >
+                        다시 시작
+                      </ResultButton>
+                    </ResultPopup>
+                  </>
                 )}
               </>
             )}

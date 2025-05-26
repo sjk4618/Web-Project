@@ -107,52 +107,62 @@ const LanguageButton = styled.button`
 
 const Ranking = () => {
   const [rankings, setRankings] = useState({
-    ko: [],
-    en: [],
+    ko: {
+      easy: [],
+      hard: [],
+    },
+    en: {
+      easy: [],
+      hard: [],
+    },
   });
   const [selectedLanguage, setSelectedLanguage] = useState("ko");
+  const [selectedDifficulty, setSelectedDifficulty] = useState("easy");
 
   useEffect(() => {
     const users = JSON.parse(localStorage.getItem("users") || "[]");
     const allScores = {
-      ko: [],
-      en: [],
+      ko: {
+        easy: [],
+        hard: [],
+      },
+      en: {
+        easy: [],
+        hard: [],
+      },
     };
 
     users.forEach((user) => {
       if (user.scores && user.scores.length > 0) {
         user.scores.forEach((score) => {
-          // 정확도, 타수, 걸린 시간을 모두 고려한 점수 계산
-          // 정확도 40%, 타수 40%, 시간 20% 비중
-          // 시간은 짧을수록 높은 점수
-          const timeScore = Math.max(0, 100 - (score.elapsedTime / 60) * 20); // 5분 이상이면 0점
-          const totalScore = Math.round(
-            score.accuracy * 0.4 + score.typingSpeed * 0.4 + timeScore * 0.2
-          );
-
           const scoreData = {
             username: user.username,
             date: score.date,
             accuracy: score.accuracy,
             typingSpeed: score.typingSpeed,
             elapsedTime: score.elapsedTime,
-            totalScore: totalScore,
             difficulty: score.difficulty,
           };
 
           if (score.language === "ko") {
-            allScores.ko.push(scoreData);
+            allScores.ko[score.difficulty].push(scoreData);
           } else {
-            allScores.en.push(scoreData);
+            allScores.en[score.difficulty].push(scoreData);
           }
         });
       }
     });
 
-    // 각 언어별로 총점 기준 내림차순 정렬
+    // 각 언어별, 난이도별로 타수 기준 내림차순 정렬
     setRankings({
-      ko: allScores.ko.sort((a, b) => b.totalScore - a.totalScore),
-      en: allScores.en.sort((a, b) => b.totalScore - a.totalScore),
+      ko: {
+        easy: allScores.ko.easy.sort((a, b) => b.typingSpeed - a.typingSpeed),
+        hard: allScores.ko.hard.sort((a, b) => b.typingSpeed - a.typingSpeed),
+      },
+      en: {
+        easy: allScores.en.easy.sort((a, b) => b.typingSpeed - a.typingSpeed),
+        hard: allScores.en.hard.sort((a, b) => b.typingSpeed - a.typingSpeed),
+      },
     });
   }, []);
 
@@ -182,17 +192,30 @@ const Ranking = () => {
         </LanguageButton>
       </LanguageSelector>
 
+      <LanguageSelector>
+        <LanguageButton
+          active={selectedDifficulty === "easy"}
+          onClick={() => setSelectedDifficulty("easy")}
+        >
+          쉬움
+        </LanguageButton>
+        <LanguageButton
+          active={selectedDifficulty === "hard"}
+          onClick={() => setSelectedDifficulty("hard")}
+        >
+          어려움
+        </LanguageButton>
+      </LanguageSelector>
+
       <RankingList>
         <RankingHeader>
           <div>순위</div>
           <div>사용자</div>
-          <div>총점</div>
           <div>정확도</div>
           <div>타수</div>
           <div>걸린 시간</div>
-          <div>난이도</div>
         </RankingHeader>
-        {rankings[selectedLanguage].map((score, index) => (
+        {rankings[selectedLanguage][selectedDifficulty].map((score, index) => (
           <RankingItem
             key={index}
             className={
@@ -207,15 +230,11 @@ const Ranking = () => {
           >
             <RankNumber>{index + 1}</RankNumber>
             <Username>{score.username}</Username>
-            <Score>
-              {isNaN(score.totalScore) ? "-" : `${score.totalScore}점`}
-            </Score>
             <Accuracy>{score.accuracy ?? 0}%</Accuracy>
             <TypingSpeed>
               {score.typingSpeed ? `${score.typingSpeed}타/분` : "-"}
             </TypingSpeed>
             <Time>{formatElapsedTime(score.elapsedTime)}</Time>
-            <Difficulty>{score.difficulty}</Difficulty>
           </RankingItem>
         ))}
       </RankingList>
