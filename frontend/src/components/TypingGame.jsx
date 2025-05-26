@@ -439,42 +439,6 @@ const TypingGame = () => {
       for (let i = 0; i < keystrokes; i++) {
         keystrokeTimesRef.current.push(Date.now());
       }
-
-      // 정확도 계산
-      const content =
-        typeof currentSentence === "object"
-          ? currentSentence.content
-          : currentSentence;
-
-      if (selectedLanguage === "ko") {
-        // 한글 타자의 경우 자모 단위로 정확도 계산
-        const accuracy = calculateHangulAccuracy(value, content);
-        setGameStats((prev) => {
-          const newTotalAccuracy =
-            prev.totalAccuracy - prev.averageAccuracy + accuracy;
-          const newAverageAccuracy =
-            newTotalAccuracy / (prev.completedSentences + 1);
-          return {
-            ...prev,
-            averageAccuracy: Math.round(newAverageAccuracy * 100) / 100,
-            totalAccuracy: newTotalAccuracy,
-          };
-        });
-      } else {
-        // 영어 타자의 경우 문자 단위로 정확도 계산
-        const accuracy = calculateEnglishAccuracy(value, content);
-        setGameStats((prev) => {
-          const newTotalAccuracy =
-            prev.totalAccuracy - prev.averageAccuracy + accuracy;
-          const newAverageAccuracy =
-            newTotalAccuracy / (prev.completedSentences + 1);
-          return {
-            ...prev,
-            averageAccuracy: Math.round(newAverageAccuracy * 100) / 100,
-            totalAccuracy: newTotalAccuracy,
-          };
-        });
-      }
     }
   };
 
@@ -497,7 +461,7 @@ const TypingGame = () => {
             : calculateEnglishAccuracy(userInput, content);
 
         // 현재 진행도 확인
-        const currentProgress = gameStats.completedSentences + 1;
+        const currentProgress = gameStats.completedSentences;
 
         // 진행도가 10을 초과하면 게임 종료
         if (currentProgress >= 10) {
@@ -513,13 +477,19 @@ const TypingGame = () => {
         setUserInput("");
 
         // 게임 통계 업데이트
-        setGameStats((prev) => ({
-          ...prev,
-          correctWords:
-            prev.correctWords + (currentAccuracy === 100 ? words : 0),
-          completedSentences: currentProgress,
-          totalInputs: prev.totalInputs + 1,
-        }));
+        setGameStats((prev) => {
+          const newTotalAccuracy = prev.totalAccuracy + currentAccuracy;
+          const newAverageAccuracy = newTotalAccuracy / (currentProgress + 1);
+          return {
+            ...prev,
+            correctWords:
+              prev.correctWords + (currentAccuracy === 100 ? words : 0),
+            completedSentences: currentProgress + 1,
+            totalInputs: prev.totalInputs + 1,
+            totalAccuracy: newTotalAccuracy,
+            averageAccuracy: Math.round(newAverageAccuracy * 100) / 100,
+          };
+        });
       }
     } catch (err) {
       console.error("키 입력 처리 중 오류 발생:", err);
