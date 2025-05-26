@@ -348,7 +348,7 @@ const TypingGame = () => {
   };
 
   const startGame = async () => {
-    if (!language) return; // 언어가 선택되지 않았으면 시작하지 않음
+    if (!language) return;
 
     setIsLoading(true);
     try {
@@ -358,8 +358,11 @@ const TypingGame = () => {
         initialSentences = await fetchAndTranslate30Quotes();
       } else {
         // 영어 타자: 영어 명언만 받아옴
-        const res = await axios.get("/api/quotes?limit=30");
-        initialSentences = res.data.results.map((item) => item.content);
+        const res = await axios.get("/api/quotes");
+        initialSentences = res.data.results.map((item) => ({
+          content: item.content,
+          author: item.author,
+        }));
       }
 
       setSentenceQueue(initialSentences.slice(0, 10));
@@ -442,9 +445,10 @@ const TypingGame = () => {
       accuracy: Math.round(gameStats.averageAccuracy),
       correctWords: gameStats.correctWords,
       difficulty,
-      language, // 언어 정보 추가
+      language,
       date: new Date().toLocaleDateString(),
       typingSpeed: gameStats.typingSpeed,
+      elapsedTime: gameStats.elapsedTime,
     };
 
     const newScores = [...scores, finalStats].slice(-10);
@@ -489,17 +493,31 @@ const TypingGame = () => {
   };
 
   const renderText = () => {
-    return currentSentence.split("").map((char, index) => {
-      let color = "#666";
-      if (index < userInput.length) {
-        color = userInput[index] === char ? "#4CAF50" : "#ff4444";
-      }
-      return (
-        <span key={index} style={{ color }}>
-          {char}
-        </span>
-      );
-    });
+    const content =
+      typeof currentSentence === "object"
+        ? currentSentence.content
+        : currentSentence;
+    const author =
+      typeof currentSentence === "object" ? currentSentence.author : null;
+
+    return (
+      <>
+        {content.split("").map((char, index) => {
+          let color = "#666";
+          if (index < userInput.length) {
+            color = userInput[index] === char ? "#4CAF50" : "#ff4444";
+          }
+          return (
+            <span key={index} style={{ color }}>
+              {char}
+            </span>
+          );
+        })}
+        {author && (
+          <span style={{ color: "#666", marginLeft: "1rem" }}>- {author}</span>
+        )}
+      </>
+    );
   };
 
   const chartData = {
@@ -585,29 +603,31 @@ const TypingGame = () => {
                         <StatValue>
                           {Math.round(gameStats.averageAccuracy)}%
                         </StatValue>
-                        <StatDescription>
-                          정확하게 입력한 글자의 비율입니다.
-                        </StatDescription>
                       </StatItem>
                       <StatItem>
                         <StatLabel>타수</StatLabel>
                         <StatValue>{gameStats.typingSpeed}타/분</StatValue>
-                        <StatDescription>
-                          {language === "ko"
-                            ? "한컴타자연습 방식 (자음/모음 각각 1타)"
-                            : "영어 타자 방식 (키 입력 기준)"}
-                        </StatDescription>
                       </StatItem>
                       <StatItem>
                         <StatLabel>진행도</StatLabel>
                         <StatValue>{gameStats.completedSentences}/10</StatValue>
-                        <StatDescription>완료한 문장 수</StatDescription>
                       </StatItem>
                     </GameStats>
                   </>
                 )}
 
-                <TextDisplay>{renderText()}</TextDisplay>
+                <TextDisplay>
+                  {renderText()}
+                  <div
+                    style={{
+                      fontSize: "0.9rem",
+                      color: "#666",
+                      marginTop: "0.5rem",
+                    }}
+                  >
+                    * 작가 이름은 입력하지 않아도 됩니다.
+                  </div>
+                </TextDisplay>
 
                 <Input
                   ref={inputRef}

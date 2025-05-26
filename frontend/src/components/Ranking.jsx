@@ -24,7 +24,7 @@ const RankingItem = styled.div`
   padding: 1rem;
   border-bottom: 1px solid #eee;
   display: grid;
-  grid-template-columns: 0.5fr 2fr 1fr 1fr 1fr 1fr;
+  grid-template-columns: 0.5fr 2fr 1fr 1fr 1fr 1fr 1fr;
   gap: 1rem;
   align-items: center;
 
@@ -76,6 +76,10 @@ const TypingSpeed = styled.div`
   color: #ff9800;
 `;
 
+const Time = styled.div`
+  color: #9c27b0;
+`;
+
 const Difficulty = styled.div`
   color: #666;
 `;
@@ -118,9 +122,12 @@ const Ranking = () => {
     users.forEach((user) => {
       if (user.scores && user.scores.length > 0) {
         user.scores.forEach((score) => {
-          // 정확도와 타수를 합산한 점수 계산 (정확도 60%, 타수 40% 비중)
+          // 정확도, 타수, 걸린 시간을 모두 고려한 점수 계산
+          // 정확도 40%, 타수 40%, 시간 20% 비중
+          // 시간은 짧을수록 높은 점수
+          const timeScore = Math.max(0, 100 - (score.elapsedTime / 60) * 20); // 5분 이상이면 0점
           const totalScore = Math.round(
-            score.accuracy * 0.6 + score.typingSpeed * 0.4
+            score.accuracy * 0.4 + score.typingSpeed * 0.4 + timeScore * 0.2
           );
 
           const scoreData = {
@@ -128,6 +135,7 @@ const Ranking = () => {
             date: score.date,
             accuracy: score.accuracy,
             typingSpeed: score.typingSpeed,
+            elapsedTime: score.elapsedTime,
             totalScore: totalScore,
             difficulty: score.difficulty,
           };
@@ -147,6 +155,12 @@ const Ranking = () => {
       en: allScores.en.sort((a, b) => b.totalScore - a.totalScore),
     });
   }, []);
+
+  const formatElapsedTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}분 ${remainingSeconds}초`;
+  };
 
   return (
     <Container>
@@ -174,6 +188,7 @@ const Ranking = () => {
           <div>총점</div>
           <div>정확도</div>
           <div>타수</div>
+          <div>걸린 시간</div>
           <div>난이도</div>
         </RankingHeader>
         {rankings[selectedLanguage].map((score, index) => (
@@ -194,6 +209,7 @@ const Ranking = () => {
             <Score>{score.totalScore}점</Score>
             <Accuracy>{score.accuracy}%</Accuracy>
             <TypingSpeed>{score.typingSpeed}타/분</TypingSpeed>
+            <Time>{formatElapsedTime(score.elapsedTime)}</Time>
             <Difficulty>{score.difficulty}</Difficulty>
           </RankingItem>
         ))}

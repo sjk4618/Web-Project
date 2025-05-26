@@ -178,6 +178,13 @@ const MyPage = () => {
         yAxisID: "y1",
       },
       {
+        label: "한글 타자 시간 (초)",
+        data: userStats.koStats.scores.map((score) => score.elapsedTime),
+        borderColor: "#9C27B0",
+        tension: 0.1,
+        yAxisID: "y2",
+      },
+      {
         label: "영어 타자 정확도 (%)",
         data: userStats.enStats.scores.map((score) => score.accuracy),
         borderColor: "#FF9800",
@@ -190,6 +197,13 @@ const MyPage = () => {
         borderColor: "#F44336",
         tension: 0.1,
         yAxisID: "y1",
+      },
+      {
+        label: "영어 타자 시간 (초)",
+        data: userStats.enStats.scores.map((score) => score.elapsedTime),
+        borderColor: "#795548",
+        tension: 0.1,
+        yAxisID: "y2",
       },
     ],
   };
@@ -225,7 +239,26 @@ const MyPage = () => {
           drawOnChartArea: false,
         },
       },
+      y2: {
+        type: "linear",
+        display: true,
+        position: "right",
+        title: {
+          display: true,
+          text: "시간 (초)",
+        },
+        min: 0,
+        grid: {
+          drawOnChartArea: false,
+        },
+      },
     },
+  };
+
+  const formatElapsedTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}분 ${remainingSeconds}초`;
   };
 
   return (
@@ -242,6 +275,17 @@ const MyPage = () => {
           <StatValue>{userStats.koStats.averageSpeed}타/분</StatValue>
         </StatCard>
         <StatCard>
+          <StatLabel>한글 타자 평균 시간</StatLabel>
+          <StatValue>
+            {formatElapsedTime(
+              userStats.koStats.scores.reduce(
+                (acc, curr) => acc + curr.elapsedTime,
+                0
+              ) / userStats.koStats.scores.length || 0
+            )}
+          </StatValue>
+        </StatCard>
+        <StatCard>
           <StatLabel>한글 타자 게임 수</StatLabel>
           <StatValue>{userStats.koStats.totalGames}회</StatValue>
         </StatCard>
@@ -252,6 +296,17 @@ const MyPage = () => {
         <StatCard>
           <StatLabel>영어 타자 평균 속도</StatLabel>
           <StatValue>{userStats.enStats.averageSpeed}타/분</StatValue>
+        </StatCard>
+        <StatCard>
+          <StatLabel>영어 타자 평균 시간</StatLabel>
+          <StatValue>
+            {formatElapsedTime(
+              userStats.enStats.scores.reduce(
+                (acc, curr) => acc + curr.elapsedTime,
+                0
+              ) / userStats.enStats.scores.length || 0
+            )}
+          </StatValue>
         </StatCard>
         <StatCard>
           <StatLabel>영어 타자 게임 수</StatLabel>
@@ -268,6 +323,7 @@ const MyPage = () => {
               <div>타자 종류</div>
               <div>정확도</div>
               <div>타수</div>
+              <div>걸린 시간</div>
               <div>난이도</div>
             </ScoreHeader>
             {[...userStats.koStats.scores, ...userStats.enStats.scores]
@@ -280,6 +336,7 @@ const MyPage = () => {
                   </div>
                   <div>{score.accuracy}%</div>
                   <div>{score.typingSpeed}타/분</div>
+                  <div>{formatElapsedTime(score.elapsedTime)}</div>
                   <div>{score.difficulty}</div>
                 </ScoreItem>
               ))}
