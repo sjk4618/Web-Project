@@ -482,7 +482,7 @@ const TypingGame = () => {
             ...prev,
             correctWords:
               prev.correctWords + (currentAccuracy === 100 ? words : 0),
-            completedSentences: currentProgress + 1,
+            completedSentences: prev.completedSentences + 1,
             totalInputs: prev.totalInputs + 1,
             totalAccuracy: newTotalAccuracy,
             averageAccuracy: Math.round(newAverageAccuracy * 100) / 100,
@@ -530,8 +530,10 @@ const TypingGame = () => {
         }));
       }
 
-      setRemainingSentences(initialSentences);
-      setCurrentSentence(initialSentences[0]);
+      // 문장을 10개로 제한
+      const limitedSentences = initialSentences.slice(0, 10);
+      setRemainingSentences(limitedSentences);
+      setCurrentSentence(limitedSentences[0]);
       setUserInput("");
       setIsGameActive(true);
       startTimeRef.current = Date.now();
@@ -814,7 +816,7 @@ const TypingGame = () => {
             </StatItem>
             <StatItem>
               <StatLabel>진행도</StatLabel>
-              <StatValue>{gameStats.completedSentences}/10</StatValue>
+              <StatValue>{gameStats.completedSentences + 1}/10</StatValue>
             </StatItem>
           </StatsContainer>
         </>
