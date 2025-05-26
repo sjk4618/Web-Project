@@ -40,5 +40,16 @@ jobs:
           key: ${{ secrets.SERVER_KEY_DEV }}
           script: |
             cd ~
+            # 프론트엔드 빌드
+            cd frontend
+            npm install
+            npm run build
+
+            # proxy 디렉토리의 기존 dist 삭제 및 새로운 dist 이동
+            rm -rf ../proxy/dist
+            mv dist ../proxy/
+
+            # 배포 스크립트 실행
+            cd ~
             chmod +x ./deploy.sh
             ./deploy.sh
