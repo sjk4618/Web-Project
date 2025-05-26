@@ -210,6 +210,32 @@ const TypingGame = () => {
     return `${minutes}분 ${remainingSeconds}초`;
   };
 
+  // 한글 자모 분리 함수 수정
+  const decomposeHangul = (char) => {
+    const code = char.charCodeAt(0);
+    if (code < 0xac00 || code > 0xd7a3) return [char]; // 한글이 아닌 경우
+
+    const syllable = code - 0xac00;
+    const final = syllable % 28;
+    const medial = ((syllable - final) / 28) % 21;
+    const initial = Math.floor((syllable - final) / 28 / 21);
+
+    const result = [];
+    if (initial > 0) result.push(String.fromCharCode(0x1100 + initial - 1)); // 초성
+    if (medial > 0) result.push(String.fromCharCode(0x1161 + medial - 1)); // 중성
+    if (final > 0) result.push(String.fromCharCode(0x11a7 + final)); // 종성
+
+    return result;
+  };
+
+  // 한글 타수 계산 함수 수정
+  const calculateHangulKeystrokes = (text) => {
+    return text.split("").reduce((count, char) => {
+      const decomposed = decomposeHangul(char);
+      return count + decomposed.length;
+    }, 0);
+  };
+
   useEffect(() => {
     let timer;
     if (isGameActive) {
@@ -217,38 +243,51 @@ const TypingGame = () => {
         const currentTime = Date.now();
         const elapsedTime = (currentTime - startTimeRef.current) / 1000;
 
+        // 현재 문장에서 정확한 입력만 필터링
+        const correctInput = userInput
+          .split("")
+          .filter((char, index) => char === currentSentence[index])
+          .join("");
+
+        // 현재 문장의 타수 계산 (한컴타자 방식)
+        const correctKeystrokes = calculateHangulKeystrokes(correctInput);
+
+        // 최근 10초 동안의 타수 계산
+        const recentKeystrokes = keystrokeTimesRef.current.filter(
+          (time) => currentTime - time <= 10000
+        ).length;
+
+        let typingSpeed;
         if (lastKeystrokeTimeRef.current) {
           const timeSinceLastKeystroke =
             (currentTime - lastKeystrokeTimeRef.current) / 1000;
           if (timeSinceLastKeystroke > 1) {
-            const recentKeystrokes = keystrokeTimesRef.current.filter(
-              (time) => currentTime - time <= 10000
-            ).length;
-
-            const decayFactor = Math.min(timeSinceLastKeystroke / 10, 1);
+            // 1초 이상 입력이 없으면
+            // 타수를 점진적으로 감소
+            const decayFactor = Math.min(timeSinceLastKeystroke / 10, 1); // 최대 10초 동안 감소
             const decayedKeystrokes = Math.floor(
               recentKeystrokes * (1 - decayFactor)
             );
-            const typingSpeed = Math.round((decayedKeystrokes / 10) * 60);
-
-            setGameStats((prev) => ({
-              ...prev,
-              typingSpeed,
-              elapsedTime,
-            }));
+            typingSpeed = Math.round((decayedKeystrokes / 10) * 60);
+          } else {
+            typingSpeed = Math.round((recentKeystrokes / 10) * 60);
           }
+        } else {
+          typingSpeed = Math.round((recentKeystrokes / 10) * 60);
         }
 
         setGameStats((prev) => ({
           ...prev,
+          correctKeystrokes,
+          typingSpeed,
           elapsedTime,
         }));
-      }, 100);
+      }, 100); // 0.1초마다 업데이트
     }
     return () => {
       if (timer) clearInterval(timer);
     };
-  }, [isGameActive]);
+  }, [isGameActive, userInput, currentSentence]);
 
   const handleInputChange = (e) => {
     const value = e.target.value;
@@ -256,7 +295,12 @@ const TypingGame = () => {
     lastKeystrokeTimeRef.current = Date.now();
 
     if (value.length > userInput.length) {
-      keystrokeTimesRef.current.push(Date.now());
+      // 새로운 키 입력이 있을 때마다 타수 증가
+      const newChar = value[value.length - 1];
+      const keystrokes = calculateHangulKeystrokes(newChar);
+      for (let i = 0; i < keystrokes; i++) {
+        keystrokeTimesRef.current.push(Date.now());
+      }
     }
   };
 

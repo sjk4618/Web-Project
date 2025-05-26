@@ -7,7 +7,7 @@ const agent = new https.Agent({ rejectUnauthorized: false });
 export default async function handler(req, res) {
   try {
     const response = await axios.get(
-      "https://api.quotable.io/quotes?limit=30&page=1",
+      "https://api.quotable.io/quotes?limit=10&page=1",
       { httpsAgent: agent }
     );
     res.setHeader("Access-Control-Allow-Origin", "*");
