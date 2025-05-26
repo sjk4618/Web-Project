@@ -178,22 +178,19 @@ const TypingGame = () => {
       const res = await axios.get("/api/quotes");
       const quoteList = res.data.results.map((item) => item.content);
 
-      // 번역도 nginx 프록시를 통해 요청
-      const translatedQuotes = await Promise.all(
-        quoteList.map(async (quote) => {
-          try {
-            const response = await axios.post("/api/translate", {
-              text: quote,
-              source: "en",
-              target: "ko",
-            });
-            return response.data.translatedText;
-          } catch (err) {
-            console.error("번역 중 오류:", err);
-            return quote; // 번역 실패 시 원문 반환
-          }
-        })
-      );
+      // 번역도 nginx 프록시를 통해 한 번에 여러 문장 번역 요청
+      let translatedQuotes = quoteList;
+      try {
+        const response = await axios.post("/api/translate", {
+          text: quoteList,
+          source: "EN",
+          target: "KO",
+        });
+        translatedQuotes = response.data.translatedTexts;
+      } catch (err) {
+        console.error("번역 중 오류:", err);
+        // 번역 실패 시 원문 사용
+      }
 
       return translatedQuotes;
     } catch (err) {
