@@ -484,7 +484,7 @@ const TypingGame = () => {
             ...prev,
             correctWords:
               prev.correctWords + (currentAccuracy === 100 ? words : 0),
-            completedSentences: prev.completedSentences + 1,
+            completedSentences: currentProgress + 1,
             totalInputs: prev.totalInputs + 1,
             totalAccuracy: newTotalAccuracy,
             averageAccuracy: Math.round(newAverageAccuracy * 100) / 100,
