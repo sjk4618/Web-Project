@@ -237,6 +237,8 @@ const TypingGame = () => {
     totalInputs: 0,
     totalCorrectChars: 0,
     totalChars: 0,
+    totalDecomposedInput: "",
+    totalDecomposedTarget: "",
   });
   const [_remainingSentences, setRemainingSentences] = useState([]);
   const inputRef = useRef(null);
@@ -375,10 +377,38 @@ const TypingGame = () => {
       if (language === "ko") {
         // 한글 타자의 경우 새로운 정확도 계산 방식 사용
         const currentAccuracy = calculateHangulAccuracy(value, content);
-        setGameStats((prev) => ({
-          ...prev,
-          averageAccuracy: currentAccuracy,
-        }));
+
+        // 전체 자모 누적
+        setGameStats((prev) => {
+          const newDecomposedInput = (
+            prev.totalDecomposedInput + value
+          ).normalize("NFD");
+          const newDecomposedTarget = (
+            prev.totalDecomposedTarget + content
+          ).normalize("NFD");
+
+          let totalCorrectCount = 0;
+          const minLength = Math.min(
+            newDecomposedInput.length,
+            newDecomposedTarget.length
+          );
+
+          for (let i = 0; i < minLength; i++) {
+            if (newDecomposedInput[i] === newDecomposedTarget[i]) {
+              totalCorrectCount++;
+            }
+          }
+
+          const totalAccuracy =
+            (totalCorrectCount / newDecomposedTarget.length) * 100;
+
+          return {
+            ...prev,
+            totalDecomposedInput: newDecomposedInput,
+            totalDecomposedTarget: newDecomposedTarget,
+            averageAccuracy: Math.round(totalAccuracy * 100) / 100,
+          };
+        });
       } else {
         // 영어 타자는 기존 방식대로 계산
         const isCorrect = newChar === content[value.length - 1];
@@ -481,6 +511,8 @@ const TypingGame = () => {
         totalInputs: 0,
         totalCorrectChars: 0,
         totalChars: 0,
+        totalDecomposedInput: "",
+        totalDecomposedTarget: "",
       });
       if (inputRef.current) {
         inputRef.current.focus();
@@ -508,6 +540,8 @@ const TypingGame = () => {
         totalInputs: 0,
         totalCorrectChars: 0,
         totalChars: 0,
+        totalDecomposedInput: "",
+        totalDecomposedTarget: "",
       });
       if (inputRef.current) {
         inputRef.current.focus();
@@ -669,6 +703,8 @@ const TypingGame = () => {
       totalInputs: 0,
       totalCorrectChars: 0,
       totalChars: 0,
+      totalDecomposedInput: "",
+      totalDecomposedTarget: "",
     });
     setRemainingSentences([]);
   };
