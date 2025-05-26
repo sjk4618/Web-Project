@@ -235,6 +235,8 @@ const TypingGame = () => {
     completedSentences: 0,
     totalAccuracy: 0,
     totalInputs: 0,
+    totalCorrectChars: 0,
+    totalChars: 0,
   });
   const [_remainingSentences, setRemainingSentences] = useState([]);
   const inputRef = useRef(null);
@@ -341,14 +343,25 @@ const TypingGame = () => {
       for (let i = 0; i < keystrokes; i++) {
         keystrokeTimesRef.current.push(Date.now());
       }
-    }
 
-    // 실시간 정확도 계산
-    const currentAccuracy = calculateAccuracy();
-    setGameStats((prev) => ({
-      ...prev,
-      averageAccuracy: prev.averageAccuracy, // 이전 정확도 유지
-    }));
+      // 정확도 계산
+      const content =
+        typeof currentSentence === "object"
+          ? currentSentence.content
+          : currentSentence;
+      const isCorrect = newChar === content[value.length - 1];
+
+      setGameStats((prev) => ({
+        ...prev,
+        totalCorrectChars: prev.totalCorrectChars + (isCorrect ? 1 : 0),
+        totalChars: prev.totalChars + 1,
+        averageAccuracy: Math.round(
+          ((prev.totalCorrectChars + (isCorrect ? 1 : 0)) /
+            (prev.totalChars + 1)) *
+            100
+        ),
+      }));
+    }
   };
 
   const handleKeyDown = async (e) => {
@@ -367,7 +380,6 @@ const TypingGame = () => {
         completedSentences: prev.completedSentences + 1,
         totalAccuracy: prev.totalAccuracy + currentAccuracy,
         totalInputs: prev.totalInputs + 1,
-        averageAccuracy: currentAccuracy,
       }));
 
       if (gameStats.completedSentences + 1 >= 10) {
@@ -392,10 +404,8 @@ const TypingGame = () => {
     try {
       let initialSentences;
       if (language === "ko") {
-        // 한글 타자: 영어 명언을 받아와서 번역
         initialSentences = await fetchAndTranslate30Quotes(difficulty);
       } else {
-        // 영어 타자: 영어 명언만 받아옴
         let minLength = 0,
           maxLength = 1000;
         if (difficulty === "easy") {
@@ -430,6 +440,8 @@ const TypingGame = () => {
         completedSentences: 0,
         totalAccuracy: 0,
         totalInputs: 0,
+        totalCorrectChars: 0,
+        totalChars: 0,
       });
       if (inputRef.current) {
         inputRef.current.focus();
@@ -455,6 +467,8 @@ const TypingGame = () => {
         completedSentences: 0,
         totalAccuracy: 0,
         totalInputs: 0,
+        totalCorrectChars: 0,
+        totalChars: 0,
       });
       if (inputRef.current) {
         inputRef.current.focus();
@@ -614,6 +628,8 @@ const TypingGame = () => {
       completedSentences: 0,
       totalAccuracy: 0,
       totalInputs: 0,
+      totalCorrectChars: 0,
+      totalChars: 0,
     });
     setRemainingSentences([]);
   };
