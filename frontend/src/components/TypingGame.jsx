@@ -222,17 +222,45 @@ const TypingGame = () => {
     };
   }, [isGameActive]);
 
+  // 한글 자모 분리 함수 추가
+  const decomposeHangul = (char) => {
+    const code = char.charCodeAt(0);
+    if (code < 0xac00 || code > 0xd7a3) return [char]; // 한글이 아닌 경우
+
+    const syllable = code - 0xac00;
+    const final = syllable % 28;
+    const medial = ((syllable - final) / 28) % 21;
+    const initial = Math.floor((syllable - final) / 28 / 21);
+
+    const result = [];
+    if (initial > 0) result.push(String.fromCharCode(0x1100 + initial - 1)); // 초성
+    if (medial > 0) result.push(String.fromCharCode(0x1161 + medial - 1)); // 중성
+    if (final > 0) result.push(String.fromCharCode(0x11a7 + final)); // 종성
+
+    return result;
+  };
+
+  // 한글 타수 계산 함수 추가
+  const calculateHangulKeystrokes = (text) => {
+    return text.split("").reduce((count, char) => {
+      return count + decomposeHangul(char).length;
+    }, 0);
+  };
+
   useEffect(() => {
     if (isGameActive) {
       const elapsedTime = (Date.now() - startTimeRef.current) / 1000;
-      const correctCharacters = userInput
+      const correctInput = userInput
         .split("")
-        .filter((char, index) => char === currentSentence[index]).length;
+        .filter((char, index) => char === currentSentence[index])
+        .join("");
+
+      const correctKeystrokes = calculateHangulKeystrokes(correctInput);
 
       setGameStats((prev) => ({
         ...prev,
-        correctKeystrokes: correctCharacters,
-        typingSpeed: Math.round((correctCharacters / elapsedTime) * 60),
+        correctKeystrokes: correctKeystrokes,
+        typingSpeed: Math.round((correctKeystrokes / elapsedTime) * 60),
       }));
     }
   }, [userInput, isGameActive, currentSentence]);
@@ -475,7 +503,7 @@ const TypingGame = () => {
                   <StatLabel>타수</StatLabel>
                   <StatValue>{gameStats.typingSpeed}타/분</StatValue>
                   <StatDescription>
-                    정확하게 입력한 글자 수 기준입니다.
+                    한컴타자연습 방식 (자음/모음 각각 1타)
                   </StatDescription>
                 </StatItem>
               </GameStats>
@@ -507,7 +535,7 @@ const TypingGame = () => {
                 </ScoreText>
                 <ScoreText>최종 타수: {gameStats.typingSpeed}타/분</ScoreText>
                 <ScoreText>
-                  정확한 글자 수: {gameStats.correctKeystrokes}
+                  정확한 입력 수: {gameStats.correctKeystrokes}타
                 </ScoreText>
                 <Button onClick={startGame}>다시 시작</Button>
               </ResultBox>
