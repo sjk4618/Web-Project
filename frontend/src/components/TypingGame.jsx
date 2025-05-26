@@ -196,11 +196,11 @@ const TypingGame = () => {
     typingSpeed: 0,
     totalKeystrokes: 0,
     correctKeystrokes: 0,
-    totalCorrectInput: "",
   });
   const [, setSentenceQueue] = useState([]);
   const inputRef = useRef(null);
   const startTimeRef = useRef(null);
+  const lastKeystrokeTimeRef = useRef(null);
 
   useEffect(() => {
     let timer;
@@ -250,21 +250,35 @@ const TypingGame = () => {
 
   useEffect(() => {
     if (isGameActive) {
-      const elapsedTime = (Date.now() - startTimeRef.current) / 1000;
+      const currentTime = Date.now();
+      const elapsedTime = (currentTime - startTimeRef.current) / 1000;
+
+      // 현재 문장에서 정확한 입력만 필터링
       const correctInput = userInput
         .split("")
         .filter((char, index) => char === currentSentence[index])
         .join("");
 
-      // 전체 정확한 입력에 현재 문장의 정확한 입력을 추가
-      const totalCorrectInput = gameStats.totalCorrectInput + correctInput;
-      const correctKeystrokes = calculateHangulKeystrokes(totalCorrectInput);
+      // 현재 문장의 타수 계산
+      const correctKeystrokes = calculateHangulKeystrokes(correctInput);
+
+      // 마지막 키 입력 시간이 없으면 현재 시간으로 설정
+      if (!lastKeystrokeTimeRef.current) {
+        lastKeystrokeTimeRef.current = currentTime;
+      }
+
+      // 마지막 키 입력 이후의 시간으로 타수 계산
+      const timeSinceLastKeystroke =
+        (currentTime - lastKeystrokeTimeRef.current) / 1000;
+      const typingSpeed =
+        timeSinceLastKeystroke > 0
+          ? Math.round((correctKeystrokes / timeSinceLastKeystroke) * 60)
+          : 0;
 
       setGameStats((prev) => ({
         ...prev,
-        totalCorrectInput,
         correctKeystrokes: correctKeystrokes,
-        typingSpeed: Math.round((correctKeystrokes / elapsedTime) * 60),
+        typingSpeed: typingSpeed,
       }));
     }
   }, [userInput, isGameActive, currentSentence]);
@@ -305,6 +319,7 @@ const TypingGame = () => {
       setTimeLeft(60);
       setIsGameActive(true);
       startTimeRef.current = Date.now();
+      lastKeystrokeTimeRef.current = null;
       setGameStats({
         correctWords: 0,
         totalTime: 0,
@@ -312,7 +327,6 @@ const TypingGame = () => {
         typingSpeed: 0,
         totalKeystrokes: 0,
         correctKeystrokes: 0,
-        totalCorrectInput: "",
       });
       if (inputRef.current) {
         inputRef.current.focus();
@@ -326,6 +340,7 @@ const TypingGame = () => {
       setTimeLeft(60);
       setIsGameActive(true);
       startTimeRef.current = Date.now();
+      lastKeystrokeTimeRef.current = null;
       setGameStats({
         correctWords: 0,
         totalTime: 0,
@@ -333,7 +348,6 @@ const TypingGame = () => {
         typingSpeed: 0,
         totalKeystrokes: 0,
         correctKeystrokes: 0,
-        totalCorrectInput: "",
       });
       if (inputRef.current) {
         inputRef.current.focus();
@@ -346,6 +360,7 @@ const TypingGame = () => {
   const handleInputChange = (e) => {
     const value = e.target.value;
     setUserInput(value);
+    lastKeystrokeTimeRef.current = Date.now();
   };
 
   const handleKeyDown = async (e) => {
@@ -372,6 +387,7 @@ const TypingGame = () => {
         }
         setCurrentSentence(newQueue[0]);
         setUserInput("");
+        lastKeystrokeTimeRef.current = null;
         return newQueue;
       });
     }
