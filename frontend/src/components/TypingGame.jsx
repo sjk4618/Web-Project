@@ -171,7 +171,7 @@ const LanguageButtons = styled.div`
   margin-top: 1rem;
 `;
 
-const TypingGame = ({ onReset }) => {
+const TypingGame = () => {
   const [difficulty, setDifficulty] = useState("");
   const [language, setLanguage] = useState(null); // 'ko' 또는 'en'
   const [currentSentence, setCurrentSentence] = useState("");
@@ -547,7 +547,6 @@ const TypingGame = ({ onReset }) => {
       completedSentences: 0,
     });
     setRemainingSentences([]);
-    onReset?.();
   };
 
   return (
