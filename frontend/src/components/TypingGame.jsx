@@ -150,7 +150,7 @@ const TypingGame = () => {
     currentCpm: 0,
     averageAccuracy: 0,
   });
-  const [sentenceQueue, setSentenceQueue] = useState([]);
+  const [, setSentenceQueue] = useState([]);
   const inputRef = useRef(null);
   const startTimeRef = useRef(null);
 
