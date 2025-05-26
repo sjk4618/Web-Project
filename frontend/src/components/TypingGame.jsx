@@ -135,6 +135,13 @@ const StatDescription = styled.div`
   max-width: 150px;
 `;
 
+const LoadingView = styled.div`
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.2rem;
+  color: #666;
+`;
+
 const TypingGame = () => {
   const [difficulty, setDifficulty] = useState("medium");
   const [currentSentence, setCurrentSentence] = useState("");
@@ -214,6 +221,7 @@ const TypingGame = () => {
   };
 
   const startGame = async () => {
+    setIsLoading(true);
     try {
       const initialSentences = await fetchAndTranslate30Quotes();
       setSentenceQueue(initialSentences);
@@ -251,6 +259,8 @@ const TypingGame = () => {
       if (inputRef.current) {
         inputRef.current.focus();
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -411,63 +421,76 @@ const TypingGame = () => {
 
         <Timer time={timeLeft}>{timeLeft}초</Timer>
 
-        {isLoading && <TextDisplay>명언을 받아오고 있습니다...</TextDisplay>}
+        {isLoading ? (
+          <LoadingView>
+            <TextDisplay>
+              명언을 받아오고 있습니다...
+              <br />
+              잠시만 기다려주세요.
+            </TextDisplay>
+          </LoadingView>
+        ) : (
+          <>
+            {isGameActive && (
+              <GameStats>
+                <StatItem>
+                  <StatLabel>현재 WPM</StatLabel>
+                  <StatValue>{gameStats.currentWpm}</StatValue>
+                  <StatDescription>
+                    WPM(Words Per Minute)은 1분당 입력한 단어 수를 의미합니다.
+                  </StatDescription>
+                </StatItem>
+                <StatItem>
+                  <StatLabel>현재 CPM</StatLabel>
+                  <StatValue>{gameStats.currentCpm}</StatValue>
+                  <StatDescription>
+                    CPM(Characters Per Minute)은 1분당 입력한 글자 수를
+                    의미합니다.
+                  </StatDescription>
+                </StatItem>
+                <StatItem>
+                  <StatLabel>정확도</StatLabel>
+                  <StatValue>
+                    {Math.round(gameStats.averageAccuracy)}%
+                  </StatValue>
+                  <StatDescription>
+                    정확하게 입력한 글자의 비율입니다.
+                  </StatDescription>
+                </StatItem>
+              </GameStats>
+            )}
 
-        {!isLoading && isGameActive && (
-          <GameStats>
-            <StatItem>
-              <StatLabel>현재 WPM</StatLabel>
-              <StatValue>{gameStats.currentWpm}</StatValue>
-              <StatDescription>
-                WPM(Words Per Minute)은 1분당 입력한 단어 수를 의미합니다.
-              </StatDescription>
-            </StatItem>
-            <StatItem>
-              <StatLabel>현재 CPM</StatLabel>
-              <StatValue>{gameStats.currentCpm}</StatValue>
-              <StatDescription>
-                CPM(Characters Per Minute)은 1분당 입력한 글자 수를 의미합니다.
-              </StatDescription>
-            </StatItem>
-            <StatItem>
-              <StatLabel>정확도</StatLabel>
-              <StatValue>{Math.round(gameStats.averageAccuracy)}%</StatValue>
-              <StatDescription>
-                정확하게 입력한 글자의 비율입니다.
-              </StatDescription>
-            </StatItem>
-          </GameStats>
-        )}
+            <TextDisplay>{renderText()}</TextDisplay>
 
-        <TextDisplay>{renderText()}</TextDisplay>
+            <Input
+              ref={inputRef}
+              value={userInput}
+              onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
+              disabled={!isGameActive}
+              placeholder={
+                isGameActive
+                  ? "타이핑을 시작하세요... (엔터로 다음 문장)"
+                  : "게임을 시작하려면 난이도를 선택하세요"
+              }
+            />
 
-        <Input
-          ref={inputRef}
-          value={userInput}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyDown}
-          disabled={!isGameActive}
-          placeholder={
-            isGameActive
-              ? "타이핑을 시작하세요... (엔터로 다음 문장)"
-              : "게임을 시작하려면 난이도를 선택하세요"
-          }
-        />
+            {!isGameActive && timeLeft === 60 && (
+              <Button onClick={startGame}>게임 시작</Button>
+            )}
 
-        {!isGameActive && timeLeft === 60 && (
-          <Button onClick={startGame}>게임 시작</Button>
-        )}
-
-        {!isGameActive && timeLeft === 0 && (
-          <ResultBox>
-            <ScoreText>최종 WPM: {gameStats.currentWpm}</ScoreText>
-            <ScoreText>
-              평균 정확도: {Math.round(gameStats.averageAccuracy)}%
-            </ScoreText>
-            <ScoreText>정확한 단어: {gameStats.correctWords}</ScoreText>
-            <ScoreText>최고 기록: {bestScore} WPM</ScoreText>
-            <Button onClick={startGame}>다시 시작</Button>
-          </ResultBox>
+            {!isGameActive && timeLeft === 0 && (
+              <ResultBox>
+                <ScoreText>최종 WPM: {gameStats.currentWpm}</ScoreText>
+                <ScoreText>
+                  평균 정확도: {Math.round(gameStats.averageAccuracy)}%
+                </ScoreText>
+                <ScoreText>정확한 단어: {gameStats.correctWords}</ScoreText>
+                <ScoreText>최고 기록: {bestScore} WPM</ScoreText>
+                <Button onClick={startGame}>다시 시작</Button>
+              </ResultBox>
+            )}
+          </>
         )}
       </GameBox>
 
