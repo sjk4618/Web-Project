@@ -210,27 +210,29 @@ const TypingGame = () => {
 
       // 나머지 40개의 명언은 비동기적으로 번역
       const remainingQuotes = quoteList.slice(10);
-      Promise.all(
-        remainingQuotes.map(async (quote) => {
-          try {
-            const response = await axios.post("/api/translate", {
-              text: quote,
-              source: "en",
-              target: "ko",
-            });
-            return response.data.translatedText;
-          } catch (err) {
-            console.error("번역 중 오류:", err);
-            return quote; // 번역 실패 시 원문 반환
-          }
-        })
-      ).then((translatedRemainingQuotes) => {
-        // 번역이 완료된 나머지 명언들을 sentenceQueue에 추가
-        setSentenceQueue((prevQueue) => [
-          ...prevQueue,
-          ...translatedRemainingQuotes,
-        ]);
-      });
+      setTimeout(() => {
+        Promise.all(
+          remainingQuotes.map(async (quote) => {
+            try {
+              const response = await axios.post("/api/translate", {
+                text: quote,
+                source: "en",
+                target: "ko",
+              });
+              return response.data.translatedText;
+            } catch (err) {
+              console.error("번역 중 오류:", err);
+              return quote; // 번역 실패 시 원문 반환
+            }
+          })
+        ).then((translatedRemainingQuotes) => {
+          // 번역이 완료된 나머지 명언들을 sentenceQueue에 추가
+          setSentenceQueue((prevQueue) => [
+            ...prevQueue,
+            ...translatedRemainingQuotes,
+          ]);
+        });
+      }, 0);
 
       return translatedInitialQuotes;
     } catch (err) {
