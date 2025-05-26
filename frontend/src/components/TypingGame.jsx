@@ -331,7 +331,7 @@ const TypingGame = () => {
     return () => {
       if (timer) clearInterval(timer);
     };
-  }, [isGameActive, currentSentence]);
+  }, [isGameActive, currentSentence, userInput]);
 
   const handleInputChange = (e) => {
     const value = e.target.value;
