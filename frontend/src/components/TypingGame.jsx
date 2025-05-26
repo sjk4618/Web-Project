@@ -269,19 +269,20 @@ const TypingGame = () => {
           (prev.correctWords + 1),
       }));
 
-      // 다음 문장으로 이동
-      const newQueue = [...sentenceQueue];
-      newQueue.shift(); // 현재 문장 제거
-
-      // 문장이 5개 이하로 남으면 10개 더 받아와서 큐 맨 뒤에만 추가
-      if (newQueue.length <= 5) {
-        const moreSentences = await fetchAndTranslate10Quotes();
-        setSentenceQueue((prev) => [...prev, ...moreSentences]);
-      }
-
-      setSentenceQueue(newQueue);
-      setCurrentSentence(newQueue[0]);
-      setUserInput("");
+      setSentenceQueue((prevQueue) => {
+        const newQueue = [...prevQueue];
+        newQueue.shift();
+        // 만약 5개 이하라면, 새 문장 받아와서 뒤에 붙임 (비동기)
+        if (newQueue.length <= 5) {
+          fetchAndTranslate10Quotes().then((moreSentences) => {
+            setSentenceQueue((q) => [...q, ...moreSentences]);
+          });
+        }
+        // 현재 문장과 입력값 갱신
+        setCurrentSentence(newQueue[0]);
+        setUserInput("");
+        return newQueue;
+      });
     }
   };
 
