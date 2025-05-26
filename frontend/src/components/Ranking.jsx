@@ -105,66 +105,49 @@ const LanguageButton = styled.button`
   }
 `;
 
+const ScoreExplanation = styled.div`
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 5px;
+  margin-bottom: 2rem;
+  font-size: 0.9rem;
+  color: #666;
+  line-height: 1.5;
+`;
+
 const Ranking = () => {
-  const [rankings, setRankings] = useState({
-    ko: {
-      easy: [],
-      hard: [],
-    },
-    en: {
-      easy: [],
-      hard: [],
-    },
-  });
+  const [rankings, setRankings] = useState([]);
   const [selectedLanguage, setSelectedLanguage] = useState("ko");
   const [selectedDifficulty, setSelectedDifficulty] = useState("easy");
 
   useEffect(() => {
     const users = JSON.parse(localStorage.getItem("users") || "[]");
-    const allScores = {
-      ko: {
-        easy: [],
-        hard: [],
-      },
-      en: {
-        easy: [],
-        hard: [],
-      },
-    };
+    const allScores = users.flatMap((user) =>
+      (user.scores || []).map((score) => ({
+        ...score,
+        username: user.username,
+      }))
+    );
 
-    users.forEach((user) => {
-      if (user.scores && user.scores.length > 0) {
-        user.scores.forEach((score) => {
-          const scoreData = {
-            username: user.username,
-            date: score.date,
-            accuracy: score.accuracy,
-            typingSpeed: score.typingSpeed,
-            elapsedTime: score.elapsedTime,
-            difficulty: score.difficulty,
-          };
+    // 총점 계산: 타수 + 정확도 - 시간(초)
+    const scoresWithTotal = allScores.map((score) => ({
+      ...score,
+      totalScore: score.typingSpeed + score.accuracy - score.elapsedTime,
+    }));
 
-          if (score.language === "ko") {
-            allScores.ko[score.difficulty].push(scoreData);
-          } else {
-            allScores.en[score.difficulty].push(scoreData);
-          }
-        });
-      }
-    });
+    // 선택된 언어와 난이도에 따라 필터링
+    const filteredScores = scoresWithTotal.filter(
+      (score) =>
+        score.language === selectedLanguage &&
+        score.difficulty === selectedDifficulty
+    );
 
-    // 각 언어별, 난이도별로 타수 기준 내림차순 정렬
-    setRankings({
-      ko: {
-        easy: allScores.ko.easy.sort((a, b) => b.typingSpeed - a.typingSpeed),
-        hard: allScores.ko.hard.sort((a, b) => b.typingSpeed - a.typingSpeed),
-      },
-      en: {
-        easy: allScores.en.easy.sort((a, b) => b.typingSpeed - a.typingSpeed),
-        hard: allScores.en.hard.sort((a, b) => b.typingSpeed - a.typingSpeed),
-      },
-    });
-  }, []);
+    // 총점 기준으로 정렬
+    const sortedScores = filteredScores.sort(
+      (a, b) => b.totalScore - a.totalScore
+    );
+    setRankings(sortedScores);
+  }, [selectedLanguage, selectedDifficulty]);
 
   const formatElapsedTime = (seconds) => {
     if (!seconds || isNaN(seconds) || seconds < 0) return "-";
@@ -173,9 +156,21 @@ const Ranking = () => {
     return `${minutes}분 ${remainingSeconds}초`;
   };
 
+  const formatDate = (dateStr) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString();
+  };
+
   return (
     <Container>
       <Title>랭킹</Title>
+
+      <ScoreExplanation>
+        <h3>총점 계산 방법</h3>
+        <p>총점 = 타수 + 정확도 - 걸린 시간(초)</p>
+        <p>예시: 타수 300타/분, 정확도 95%, 걸린 시간 120초인 경우</p>
+        <p>총점 = 300 + 95 - 120 = 275점</p>
+      </ScoreExplanation>
 
       <LanguageSelector>
         <LanguageButton
@@ -192,49 +187,40 @@ const Ranking = () => {
         </LanguageButton>
       </LanguageSelector>
 
-      <LanguageSelector>
-        <LanguageButton
+      <DifficultySelector>
+        <DifficultyButton
           active={selectedDifficulty === "easy"}
           onClick={() => setSelectedDifficulty("easy")}
         >
           쉬움
-        </LanguageButton>
-        <LanguageButton
+        </DifficultyButton>
+        <DifficultyButton
           active={selectedDifficulty === "hard"}
           onClick={() => setSelectedDifficulty("hard")}
         >
           어려움
-        </LanguageButton>
-      </LanguageSelector>
+        </DifficultyButton>
+      </DifficultySelector>
 
       <RankingList>
         <RankingHeader>
           <div>순위</div>
           <div>사용자</div>
-          <div>정확도</div>
+          <div>총점</div>
           <div>타수</div>
+          <div>정확도</div>
           <div>걸린 시간</div>
+          <div>날짜</div>
         </RankingHeader>
-        {rankings[selectedLanguage][selectedDifficulty].map((score, index) => (
-          <RankingItem
-            key={index}
-            className={
-              index === 0
-                ? "top-1"
-                : index === 1
-                ? "top-2"
-                : index === 2
-                ? "top-3"
-                : ""
-            }
-          >
-            <RankNumber>{index + 1}</RankNumber>
-            <Username>{score.username}</Username>
-            <Accuracy>{score.accuracy ?? 0}%</Accuracy>
-            <TypingSpeed>
-              {score.typingSpeed ? `${score.typingSpeed}타/분` : "-"}
-            </TypingSpeed>
-            <Time>{formatElapsedTime(score.elapsedTime)}</Time>
+        {rankings.map((score, index) => (
+          <RankingItem key={index}>
+            <div>{index + 1}</div>
+            <div>{score.username}</div>
+            <div>{Math.round(score.totalScore)}점</div>
+            <div>{score.typingSpeed}타/분</div>
+            <div>{score.accuracy}%</div>
+            <div>{formatElapsedTime(score.elapsedTime)}</div>
+            <div>{formatDate(score.date)}</div>
           </RankingItem>
         ))}
       </RankingList>

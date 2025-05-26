@@ -211,6 +211,14 @@ const NoticeText = styled.div`
   margin-top: 1rem;
 `;
 
+const Timer = styled.div`
+  text-align: center;
+  font-size: 1.2rem;
+  color: #333;
+  margin-bottom: 1rem;
+  font-weight: bold;
+`;
+
 const TypingGame = () => {
   const [selectedLanguage, setSelectedLanguage] = useState(null);
   const [selectedDifficulty, setSelectedDifficulty] = useState("");
@@ -785,6 +793,7 @@ const TypingGame = () => {
 
       {isGameActive && (
         <>
+          <Timer>경과 시간: {formatElapsedTime(gameStats.elapsedTime)}</Timer>
           <GameContainer>
             <TextDisplay>{renderText()}</TextDisplay>
             <Input
