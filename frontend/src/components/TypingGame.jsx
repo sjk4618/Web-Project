@@ -153,6 +153,8 @@ const TypingGame = () => {
   const [sentenceQueue, setSentenceQueue] = useState([]);
   const inputRef = useRef(null);
   const startTimeRef = useRef(null);
+  const [allQuotes, setAllQuotes] = useState([]);
+  const [translatedQuotes, setTranslatedQuotes] = useState([]);
 
   useEffect(() => {
     let timer;
@@ -183,15 +185,16 @@ const TypingGame = () => {
     return () => clearInterval(timer);
   }, [isGameActive, timeLeft, userInput]);
 
-  const fetchQuotes = async () => {
+  const fetchAndTranslateQuotes = async () => {
     try {
-      // nginx 프록시를 통해 Vercel serverless function으로 요청
+      // 명언 가져오기
       const res = await axios.get("/api/quotes");
-      const quoteList = res.data.results.map((item) => item.content);
+      const quotes = res.data.results.map((item) => item.content);
+      setAllQuotes(quotes);
 
-      // 처음 10개의 명언만 먼저 번역
-      const initialQuotes = quoteList.slice(0, 10);
-      const translatedInitialQuotes = await Promise.all(
+      // 처음 10개만 번역
+      const initialQuotes = quotes.slice(0, 10);
+      const translatedInitial = await Promise.all(
         initialQuotes.map(async (quote) => {
           try {
             const response = await axios.post("/api/translate", {
@@ -202,62 +205,42 @@ const TypingGame = () => {
             return response.data.translatedText;
           } catch (err) {
             console.error("번역 중 오류:", err);
-            return quote; // 번역 실패 시 원문 반환
+            return quote;
           }
         })
       );
 
-      // 나머지 40개의 명언은 비동기적으로 번역
-      const remainingQuotes = quoteList.slice(10);
-      setTimeout(() => {
-        Promise.all(
-          remainingQuotes.map(async (quote) => {
-            try {
-              const response = await axios.post("/api/translate", {
-                text: quote,
-                source: "en",
-                target: "ko",
-              });
-              return response.data.translatedText;
-            } catch (err) {
-              console.error("번역 중 오류:", err);
-              return quote; // 번역 실패 시 원문 반환
-            }
-          })
-        ).then((translatedRemainingQuotes) => {
-          // 번역이 완료된 나머지 명언들을 sentenceQueue에 추가
-          setSentenceQueue((prevQueue) => [
-            ...prevQueue,
-            ...translatedRemainingQuotes,
-          ]);
-        });
-      }, 0);
-
-      return translatedInitialQuotes;
+      setTranslatedQuotes(translatedInitial);
+      return translatedInitial;
     } catch (err) {
       console.error("Quote API 에러 발생:", err);
-      // 실패 시 기본 문장들 반환
       return ENGLISH_QUOTES;
     }
   };
 
-  const getRandomSentences = async (count = 10) => {
-    const quotes = await fetchQuotes();
-    const randomSentences = [];
-    const availableQuotes = [...quotes];
-
-    for (let i = 0; i < count && availableQuotes.length > 0; i++) {
-      const randomIndex = Math.floor(Math.random() * availableQuotes.length);
-      randomSentences.push(availableQuotes[randomIndex]);
-      availableQuotes.splice(randomIndex, 1); // 이미 선택된 문장은 제거
-    }
-
-    return randomSentences;
+  const translateRemainingQuotes = async () => {
+    const remainingQuotes = allQuotes.slice(10);
+    const translatedRemaining = await Promise.all(
+      remainingQuotes.map(async (quote) => {
+        try {
+          const response = await axios.post("/api/translate", {
+            text: quote,
+            source: "en",
+            target: "ko",
+          });
+          return response.data.translatedText;
+        } catch (err) {
+          console.error("번역 중 오류:", err);
+          return quote;
+        }
+      })
+    );
+    setTranslatedQuotes((prev) => [...prev, ...translatedRemaining]);
   };
 
   const startGame = async () => {
     try {
-      const initialSentences = await getRandomSentences();
+      const initialSentences = await fetchAndTranslateQuotes();
       if (initialSentences && initialSentences.length > 0) {
         setSentenceQueue(initialSentences);
         setCurrentSentence(initialSentences[0]);
@@ -272,13 +255,18 @@ const TypingGame = () => {
           currentCpm: 0,
           averageAccuracy: 0,
         });
+
+        // 10초 후에 나머지 명언 번역 시작
+        setTimeout(() => {
+          translateRemainingQuotes();
+        }, 10000);
+
         if (inputRef.current) {
           inputRef.current.focus();
         }
       }
     } catch (err) {
       console.error("게임 시작 중 오류 발생:", err);
-      // API 호출 실패 시 로컬 데이터 사용
       const localSentences = sentences[difficulty];
       setSentenceQueue(localSentences);
       setCurrentSentence(localSentences[0]);
@@ -324,8 +312,18 @@ const TypingGame = () => {
 
       // 문장이 부족하면 새로운 문장 추가
       if (newQueue.length < 3) {
-        const newSentences = await getRandomSentences(5);
-        newQueue.push(...newSentences);
+        // 현재 사용 가능한 번역된 문장이 40개 이상 남아있으면 그대로 사용
+        if (translatedQuotes.length > 40) {
+          const remainingTranslated = translatedQuotes.slice(
+            translatedQuotes.length - 40
+          );
+          newQueue.push(...remainingTranslated);
+        } else {
+          // 새로운 명언 가져오기
+          await fetchAndTranslateQuotes();
+          const newSentences = translatedQuotes.slice(0, 5);
+          newQueue.push(...newSentences);
+        }
       }
 
       setSentenceQueue(newQueue);
