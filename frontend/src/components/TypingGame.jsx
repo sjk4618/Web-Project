@@ -192,9 +192,9 @@ const TypingGame = () => {
   const [gameStats, setGameStats] = useState({
     correctWords: 0,
     totalTime: 0,
-    currentWpm: 0,
-    currentCpm: 0,
     averageAccuracy: 0,
+    typingSpeed: 0,
+    totalKeystrokes: 0,
   });
   const [, setSentenceQueue] = useState([]);
   const inputRef = useRef(null);
@@ -225,13 +225,11 @@ const TypingGame = () => {
     if (isGameActive) {
       const elapsedTime = (Date.now() - startTimeRef.current) / 1000 / 60; // 분 단위
       const totalCharacters = userInput.length; // 실제 입력된 문자 수 사용
-      const currentWpm = calculateWPM(totalCharacters, elapsedTime);
-      const currentCpm = calculateCPM(totalCharacters, elapsedTime);
 
       setGameStats((prev) => ({
         ...prev,
-        currentWpm,
-        currentCpm,
+        totalKeystrokes: totalCharacters,
+        typingSpeed: Math.round(totalCharacters / elapsedTime), // 분당 타수 계산
       }));
     }
   }, [userInput, isGameActive]);
@@ -275,9 +273,9 @@ const TypingGame = () => {
       setGameStats({
         correctWords: 0,
         totalTime: 0,
-        currentWpm: 0,
-        currentCpm: 0,
         averageAccuracy: 0,
+        typingSpeed: 0,
+        totalKeystrokes: 0,
       });
       if (inputRef.current) {
         inputRef.current.focus();
@@ -294,9 +292,9 @@ const TypingGame = () => {
       setGameStats({
         correctWords: 0,
         totalTime: 0,
-        currentWpm: 0,
-        currentCpm: 0,
         averageAccuracy: 0,
+        typingSpeed: 0,
+        totalKeystrokes: 0,
       });
       if (inputRef.current) {
         inputRef.current.focus();
@@ -345,7 +343,6 @@ const TypingGame = () => {
   const endGame = () => {
     setIsGameActive(false);
     const finalStats = {
-      wpm: gameStats.currentWpm,
       accuracy: Math.round(gameStats.averageAccuracy),
       correctWords: gameStats.correctWords,
       difficulty,
@@ -356,9 +353,9 @@ const TypingGame = () => {
     setScores(newScores);
     localStorage.setItem("typingScores", JSON.stringify(newScores));
 
-    if (finalStats.wpm > bestScore) {
-      setBestScore(finalStats.wpm);
-      localStorage.setItem("bestScore", finalStats.wpm);
+    if (finalStats.accuracy > bestScore) {
+      setBestScore(finalStats.accuracy);
+      localStorage.setItem("bestScore", finalStats.accuracy);
     }
 
     // 로컬 스토리지에 점수 저장
@@ -412,29 +409,12 @@ const TypingGame = () => {
     labels: scores.map((score) => score.date),
     datasets: [
       {
-        label: "WPM",
-        data: scores.map((score) => score.wpm),
-        borderColor: "#4CAF50",
-        tension: 0.1,
-      },
-      {
         label: "정확도 (%)",
         data: scores.map((score) => score.accuracy),
         borderColor: "#2196F3",
         tension: 0.1,
       },
     ],
-  };
-
-  // WPM과 CPM 계산 함수 추가
-  const calculateWPM = (characters, timeInMinutes) => {
-    // 평균 단어 길이를 5글자로 가정
-    const words = characters / 5;
-    return Math.round(words / timeInMinutes);
-  };
-
-  const calculateCPM = (characters, timeInMinutes) => {
-    return Math.round(characters / timeInMinutes);
   };
 
   return (
@@ -478,21 +458,6 @@ const TypingGame = () => {
             {isGameActive && (
               <GameStats>
                 <StatItem>
-                  <StatLabel>현재 WPM</StatLabel>
-                  <StatValue>{gameStats.currentWpm}</StatValue>
-                  <StatDescription>
-                    WPM(Words Per Minute)은 1분당 입력한 단어 수를 의미합니다.
-                  </StatDescription>
-                </StatItem>
-                <StatItem>
-                  <StatLabel>현재 CPM</StatLabel>
-                  <StatValue>{gameStats.currentCpm}</StatValue>
-                  <StatDescription>
-                    CPM(Characters Per Minute)은 1분당 입력한 글자 수를
-                    의미합니다.
-                  </StatDescription>
-                </StatItem>
-                <StatItem>
                   <StatLabel>정확도</StatLabel>
                   <StatValue>
                     {Math.round(gameStats.averageAccuracy)}%
@@ -500,6 +465,11 @@ const TypingGame = () => {
                   <StatDescription>
                     정확하게 입력한 글자의 비율입니다.
                   </StatDescription>
+                </StatItem>
+                <StatItem>
+                  <StatLabel>타수</StatLabel>
+                  <StatValue>{gameStats.typingSpeed}타/분</StatValue>
+                  <StatDescription>1분당 입력한 글자 수입니다.</StatDescription>
                 </StatItem>
               </GameStats>
             )}
@@ -525,12 +495,11 @@ const TypingGame = () => {
 
             {!isGameActive && timeLeft === 0 && (
               <ResultBox>
-                <ScoreText>최종 WPM: {gameStats.currentWpm}</ScoreText>
                 <ScoreText>
                   평균 정확도: {Math.round(gameStats.averageAccuracy)}%
                 </ScoreText>
+                <ScoreText>최종 타수: {gameStats.typingSpeed}타/분</ScoreText>
                 <ScoreText>정확한 단어: {gameStats.correctWords}</ScoreText>
-                <ScoreText>최고 기록: {bestScore} WPM</ScoreText>
                 <Button onClick={startGame}>다시 시작</Button>
               </ResultBox>
             )}

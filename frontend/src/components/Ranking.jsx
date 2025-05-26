@@ -66,10 +66,9 @@ const Ranking = () => {
     try {
       const users = JSON.parse(localStorage.getItem("users") || "[]");
 
-      // 각 사용자의 최고 점수와 평균 정확도 계산
+      // 각 사용자의 평균 정확도 계산
       const userRankings = users.map((user) => {
         const scores = user.scores || [];
-        const highestWpm = Math.max(...scores.map((s) => s.wpm), 0);
         const averageAccuracy =
           scores.length > 0
             ? Math.round(
@@ -80,13 +79,12 @@ const Ranking = () => {
 
         return {
           username: user.username,
-          highestWpm,
           averageAccuracy,
         };
       });
 
-      // WPM 기준으로 정렬
-      userRankings.sort((a, b) => b.highestWpm - a.highestWpm);
+      // 정확도 기준으로 정렬
+      userRankings.sort((a, b) => b.averageAccuracy - a.averageAccuracy);
 
       setRankings(userRankings);
     } catch {
@@ -107,7 +105,6 @@ const Ranking = () => {
           <tr>
             <Th>순위</Th>
             <Th>사용자</Th>
-            <Th>최고 WPM</Th>
             <Th>평균 정확도</Th>
           </tr>
         </thead>
@@ -118,7 +115,6 @@ const Ranking = () => {
                 <Rank rank={index + 1}>{index + 1}</Rank>
               </Td>
               <Td>{user.username}</Td>
-              <Td>{user.highestWpm} WPM</Td>
               <Td>{user.averageAccuracy}%</Td>
             </Tr>
           ))}

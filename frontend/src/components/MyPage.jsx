@@ -69,8 +69,6 @@ const ScoreHeader = styled(ScoreItem)`
 
 const MyPage = () => {
   const [userStats, setUserStats] = useState({
-    highestWpm: 0,
-    averageWpm: 0,
     averageAccuracy: 0,
     totalGames: 0,
     scores: [],
@@ -84,17 +82,11 @@ const MyPage = () => {
 
       if (user && user.scores) {
         const scores = user.scores;
-        const highestWpm = Math.max(...scores.map((s) => s.wpm), 0);
-        const averageWpm = Math.round(
-          scores.reduce((acc, curr) => acc + curr.wpm, 0) / scores.length
-        );
         const averageAccuracy = Math.round(
           scores.reduce((acc, curr) => acc + curr.accuracy, 0) / scores.length
         );
 
         setUserStats({
-          highestWpm,
-          averageWpm,
           averageAccuracy,
           totalGames: scores.length,
           scores: scores.sort((a, b) => new Date(b.date) - new Date(a.date)),
@@ -106,12 +98,6 @@ const MyPage = () => {
   const chartData = {
     labels: userStats.scores.map((score) => score.date),
     datasets: [
-      {
-        label: "WPM",
-        data: userStats.scores.map((score) => score.wpm),
-        borderColor: "#4CAF50",
-        tension: 0.1,
-      },
       {
         label: "정확도 (%)",
         data: userStats.scores.map((score) => score.accuracy),
@@ -127,14 +113,6 @@ const MyPage = () => {
 
       <StatsGrid>
         <StatCard>
-          <StatLabel>최고 WPM</StatLabel>
-          <StatValue>{userStats.highestWpm}</StatValue>
-        </StatCard>
-        <StatCard>
-          <StatLabel>평균 WPM</StatLabel>
-          <StatValue>{userStats.averageWpm}</StatValue>
-        </StatCard>
-        <StatCard>
           <StatLabel>평균 정확도</StatLabel>
           <StatValue>{userStats.averageAccuracy}%</StatValue>
         </StatCard>
@@ -149,14 +127,12 @@ const MyPage = () => {
           <ScoreList>
             <ScoreHeader>
               <div>날짜</div>
-              <div>WPM</div>
               <div>정확도</div>
               <div>난이도</div>
             </ScoreHeader>
             {userStats.scores.map((score, index) => (
               <ScoreItem key={index}>
                 <div>{score.date}</div>
-                <div>{score.wpm}</div>
                 <div>{score.accuracy}%</div>
                 <div>{score.difficulty}</div>
               </ScoreItem>
