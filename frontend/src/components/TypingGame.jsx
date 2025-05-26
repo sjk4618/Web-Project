@@ -212,22 +212,25 @@ const TypingGame = () => {
           }
           return prev - 1;
         });
-
-        // WPM과 CPM 실시간 계산
-        const elapsedTime = (Date.now() - startTimeRef.current) / 1000 / 60; // 분 단위
-        const totalCharacters = userInput.length; // 실제 입력된 문자 수 사용
-        const currentWpm = calculateWPM(totalCharacters, elapsedTime);
-        const currentCpm = calculateCPM(totalCharacters, elapsedTime);
-
-        setGameStats((prev) => ({
-          ...prev,
-          currentWpm,
-          currentCpm,
-        }));
       }, 1000);
     }
     return () => clearInterval(timer);
-  }, [isGameActive, timeLeft, userInput]);
+  }, [isGameActive, timeLeft]);
+
+  useEffect(() => {
+    if (isGameActive) {
+      const elapsedTime = (Date.now() - startTimeRef.current) / 1000 / 60; // 분 단위
+      const totalCharacters = userInput.length; // 실제 입력된 문자 수 사용
+      const currentWpm = calculateWPM(totalCharacters, elapsedTime);
+      const currentCpm = calculateCPM(totalCharacters, elapsedTime);
+
+      setGameStats((prev) => ({
+        ...prev,
+        currentWpm,
+        currentCpm,
+      }));
+    }
+  }, [userInput, isGameActive]);
 
   const fetchAndTranslate30Quotes = async () => {
     try {
