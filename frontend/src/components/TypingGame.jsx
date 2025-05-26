@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 import { Line } from "react-chartjs-2";
-import { sentences } from "../data/sentences";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -138,6 +137,7 @@ const StatDescription = styled.div`
 const TypingGame = () => {
   const [difficulty, setDifficulty] = useState("medium");
   const [currentSentence, setCurrentSentence] = useState("");
+  const [translatedSentence, setTranslatedSentence] = useState("");
   const [userInput, setUserInput] = useState("");
   const [timeLeft, setTimeLeft] = useState(60);
   const [isGameActive, setIsGameActive] = useState(false);
@@ -151,10 +151,14 @@ const TypingGame = () => {
     currentCpm: 0,
     averageAccuracy: 0,
   });
-  const [sentenceQueue, setSentenceQueue] = useState([]);
   const inputRef = useRef(null);
   const startTimeRef = useRef(null);
+  const [quotes, setQuotes] = useState([]);
+  const [translatedQuotes, setTranslatedQuotes] = useState([]);
+  const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
 
+  
   useEffect(() => {
     let timer;
     if (isGameActive && timeLeft > 0) {
@@ -172,57 +176,55 @@ const TypingGame = () => {
     return () => clearInterval(timer);
   }, [isGameActive, timeLeft]);
 
-  const fetchQuotes = async () => {
+  const fetchAndTranslateQuotes = async () => {
     try {
-      // nginx 프록시를 통해 Vercel serverless function으로 요청
+      setIsLoading(true);
+      // 명언 50개 가져오기
       const res = await axios.get("/api/quotes");
-      const quoteList = res.data.results.map((item) => item.content);
+      const fetchedQuotes =
+        res.data.results?.map((result) => result.content) || ENGLISH_QUOTES;
 
-      // 번역도 nginx 프록시를 통해 한 번에 여러 문장 번역 요청
-      let translatedQuotes = quoteList;
-      try {
-        const response = await axios.post("/api/translate", {
-          text: quoteList,
-          source: "EN",
-          target: "KO",
-        });
-        translatedQuotes = response.data.translatedTexts;
-        // undefined/null 방지 및 길이 불일치 시 원문 사용
-        if (
-          !Array.isArray(translatedQuotes) ||
-          translatedQuotes.length !== quoteList.length
-        ) {
-          translatedQuotes = quoteList;
+      // 순차적으로 번역
+      const translatedResults = [];
+      for (const quote of fetchedQuotes) {
+        try {
+          const translationRes = await axios.post("/api/translate", {
+            text: quote,
+          });
+          const translatedText =
+            translationRes.data.translations?.[0]?.text ?? "";
+          translatedResults.push(translatedText);
+          console.log(`번역 완료: ${quote} -> ${translatedText}`);
+        } catch (err) {
+          console.error("번역 실패:", err);
+          translatedResults.push("");
         }
-        translatedQuotes = translatedQuotes.map((t, i) => t ?? quoteList[i]);
-      } catch (err) {
-        console.error("번역 중 오류:", err);
-        // 번역 실패 시 원문 사용
+        // API 호출 간 약간의 딜레이 추가
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
 
-      return translatedQuotes;
+      setQuotes(fetchedQuotes);
+      setTranslatedQuotes(translatedResults);
+      setIsLoading(false);
+      return true;
     } catch (err) {
-      console.error("Quote API 에러 발생:", err);
-      // 실패 시 기본 문장들 반환
-      return ENGLISH_QUOTES;
+      console.error("명언 가져오기 실패:", err);
+      setIsLoading(false);
+      return false;
     }
-  };
-
-  const getRandomSentences = async (count = 10) => {
-    const quotes = await fetchQuotes();
-    const randomSentences = [];
-    for (let i = 0; i < count; i++) {
-      const randomIndex = Math.floor(Math.random() * quotes.length);
-      randomSentences.push(quotes[randomIndex]);
-    }
-    return randomSentences;
   };
 
   const startGame = async () => {
     try {
-      const initialSentences = await getRandomSentences();
-      setSentenceQueue(initialSentences);
-      setCurrentSentence(initialSentences[0]);
+      // 명언과 번역 가져오기
+      const success = await fetchAndTranslateQuotes();
+      if (!success) {
+        throw new Error("명언 가져오기 실패");
+      }
+
+      setCurrentQuoteIndex(0);
+      setCurrentSentence(quotes[0]);
+      setTranslatedSentence(translatedQuotes[0]);
       setUserInput("");
       setTimeLeft(60);
       setIsGameActive(true);
@@ -240,10 +242,8 @@ const TypingGame = () => {
       }
     } catch (err) {
       console.error("게임 시작 중 오류 발생:", err);
-      // API 호출 실패 시 로컬 데이터 사용
-      const localSentences = sentences[difficulty];
-      setSentenceQueue(localSentences);
-      setCurrentSentence(localSentences[0]);
+      setCurrentSentence(ENGLISH_QUOTES[0]);
+      setTranslatedSentence("");
       setUserInput("");
       setTimeLeft(60);
       setIsGameActive(true);
@@ -271,7 +271,7 @@ const TypingGame = () => {
     if (e.key === "Enter") {
       e.preventDefault();
       const accuracy = calculateAccuracy();
-      const words = currentSentence.split(" ").length;
+      const words = (currentSentence || "").split(" ").length;
 
       setGameStats((prev) => ({
         ...prev,
@@ -283,17 +283,10 @@ const TypingGame = () => {
       }));
 
       // 다음 문장으로 이동
-      const newQueue = [...sentenceQueue];
-      newQueue.shift(); // 현재 문장 제거
-
-      // 문장이 부족하면 새로운 문장 추가
-      if (newQueue.length < 3) {
-        const newSentences = await getRandomSentences(5);
-        newQueue.push(...newSentences);
-      }
-
-      setSentenceQueue(newQueue);
-      setCurrentSentence(newQueue[0]);
+      const nextIndex = (currentQuoteIndex + 1) % quotes.length;
+      setCurrentQuoteIndex(nextIndex);
+      setCurrentSentence(quotes[nextIndex]);
+      setTranslatedSentence(translatedQuotes[nextIndex]);
       setUserInput("");
     }
   };
@@ -352,8 +345,15 @@ const TypingGame = () => {
   };
 
   const renderText = () => {
-    if (!currentSentence) return null;
-    return currentSentence.split("").map((char, index) => {
+    if (
+      !currentSentence ||
+      typeof currentSentence !== "string" ||
+      !currentSentence.length
+    ) {
+      return <span>문장을 불러오는 중입니다...</span>;
+    }
+
+    return (currentSentence || "").split("").map((char, index) => {
       let color = "#666";
       if (index < userInput.length) {
         color = userInput[index] === char ? "#4CAF50" : "#ff4444";
@@ -410,7 +410,13 @@ const TypingGame = () => {
 
         <Timer time={timeLeft}>{timeLeft}초</Timer>
 
-        {isGameActive && (
+        {isLoading && (
+          <div style={{ textAlign: "center", margin: "2rem 0" }}>
+            명언을 번역하는 중입니다... 잠시만 기다려주세요.
+          </div>
+        )}
+
+        {isGameActive && !isLoading && (
           <GameStats>
             <StatItem>
               <StatLabel>현재 WPM</StatLabel>
@@ -443,22 +449,33 @@ const TypingGame = () => {
           </GameStats>
         )}
 
-        <TextDisplay>{renderText()}</TextDisplay>
+        <TextDisplay>
+          {renderText()}
+          {translatedSentence && (
+            <div
+              style={{ marginTop: "1rem", color: "#666", fontSize: "1.2rem" }}
+            >
+              {translatedSentence}
+            </div>
+          )}
+        </TextDisplay>
 
         <Input
           ref={inputRef}
           value={userInput}
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
-          disabled={!isGameActive}
+          disabled={!isGameActive || isLoading}
           placeholder={
-            isGameActive
+            isLoading
+              ? "명언을 번역하는 중입니다..."
+              : isGameActive
               ? "타이핑을 시작하세요... (엔터로 다음 문장)"
               : "게임을 시작하려면 난이도를 선택하세요"
           }
         />
 
-        {!isGameActive && timeLeft === 60 && (
+        {!isGameActive && timeLeft === 60 && !isLoading && (
           <Button onClick={startGame}>게임 시작</Button>
         )}
 

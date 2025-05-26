@@ -1,44 +1,42 @@
-// serverless/api/translate.js
 import axios from "axios";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    res.status(405).json({ error: "Method not allowed" });
-    return;
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  const { text } = req.body;
+  console.log("번역 요청 텍스트:", text); // 디버깅용 로그
+
+  if (!text) {
+    return res.status(400).json({ error: "Text is required" });
   }
 
   try {
-    let { text, source = "EN", target = "KO" } = req.body || req.query;
-    const apiKey = process.env.DEEPL_API_KEY;
-
-    // text가 배열이 아니면 배열로 변환
-    if (!Array.isArray(text)) {
-      text = [text];
-    }
-
-    const params = new URLSearchParams({
-      auth_key: apiKey,
-      source_lang: source,
-      target_lang: target,
-    });
-    // 여러 문장 추가
-    text.forEach((t) => params.append("text", t));
+    console.log("DeepL API 키:", process.env.DEEPL_API_KEY ? "존재함" : "없음"); // API 키 존재 여부 확인
 
     const response = await axios.post(
       "https://api-free.deepl.com/v2/translate",
-      params,
+      {
+        text: [text],
+        target_lang: "KO",
+      },
       {
         headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
+          Authorization: `DeepL-Auth-Key ${process.env.DEEPL_API_KEY}`,
+          "Content-Type": "application/json",
         },
       }
     );
 
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.status(200).json({
-      translatedTexts: response.data.translations.map((tr) => tr.text),
+    console.log("DeepL API 응답:", response.data); // 디버깅용 로그
+    res.status(200).json(response.data);
+  } catch (error) {
+    console.error("번역 오류:", error.response?.data || error.message); // 상세 오류 로깅
+    res.status(500).json({
+      error: "Translation failed",
+      details: error.message,
+      response: error.response?.data,
     });
-  } catch (err) {
-    res.status(500).json({ error: "Translation failed", details: err.message });
   }
 }
