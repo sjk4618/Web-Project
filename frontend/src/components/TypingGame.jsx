@@ -233,6 +233,8 @@ const TypingGame = () => {
     correctKeystrokes: 0,
     elapsedTime: 0,
     completedSentences: 0,
+    totalAccuracy: 0,
+    totalInputs: 0,
   });
   const [_remainingSentences, setRemainingSentences] = useState([]);
   const inputRef = useRef(null);
@@ -302,9 +304,7 @@ const TypingGame = () => {
           const timeSinceLastKeystroke =
             (currentTime - lastKeystrokeTimeRef.current) / 1000;
           if (timeSinceLastKeystroke > 1) {
-            // 1초 이상 입력이 없으면
-            // 타수를 점진적으로 감소
-            const decayFactor = Math.min(timeSinceLastKeystroke / 10, 1); // 최대 10초 동안 감소
+            const decayFactor = Math.min(timeSinceLastKeystroke / 10, 1);
             const decayedKeystrokes = Math.floor(
               recentKeystrokes * (1 - decayFactor)
             );
@@ -326,12 +326,12 @@ const TypingGame = () => {
           elapsedTime,
           averageAccuracy: currentAccuracy,
         }));
-      }, 100); // 0.1초마다 업데이트
+      }, 100);
     }
     return () => {
       if (timer) clearInterval(timer);
     };
-  }, [isGameActive, userInput, currentSentence]);
+  }, [isGameActive, currentSentence]);
 
   const handleInputChange = (e) => {
     const value = e.target.value;
@@ -356,11 +356,17 @@ const TypingGame = () => {
           ? currentSentence.content.split(" ").length
           : currentSentence.split(" ").length;
 
+      const currentAccuracy = calculateAccuracy();
+
       setGameStats((prev) => ({
         ...prev,
-        correctWords:
-          prev.correctWords + (calculateAccuracy() === 100 ? words : 0),
+        correctWords: prev.correctWords + (currentAccuracy === 100 ? words : 0),
         completedSentences: prev.completedSentences + 1,
+        totalAccuracy: prev.totalAccuracy + currentAccuracy,
+        totalInputs: prev.totalInputs + 1,
+        averageAccuracy: Math.round(
+          (prev.totalAccuracy + currentAccuracy) / (prev.totalInputs + 1)
+        ),
       }));
 
       if (gameStats.completedSentences + 1 >= 10) {
@@ -421,6 +427,8 @@ const TypingGame = () => {
         correctKeystrokes: 0,
         elapsedTime: 0,
         completedSentences: 0,
+        totalAccuracy: 0,
+        totalInputs: 0,
       });
       if (inputRef.current) {
         inputRef.current.focus();
@@ -444,6 +452,8 @@ const TypingGame = () => {
         correctKeystrokes: 0,
         elapsedTime: 0,
         completedSentences: 0,
+        totalAccuracy: 0,
+        totalInputs: 0,
       });
       if (inputRef.current) {
         inputRef.current.focus();
@@ -601,6 +611,8 @@ const TypingGame = () => {
       correctKeystrokes: 0,
       elapsedTime: 0,
       completedSentences: 0,
+      totalAccuracy: 0,
+      totalInputs: 0,
     });
     setRemainingSentences([]);
   };
