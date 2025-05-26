@@ -505,27 +505,21 @@ const TypingGame = () => {
           return;
         }
 
-        // 게임 통계와 다음 문장으로의 이동을 한 번에 처리
-        setGameStats((prev) => {
-          const newStats = {
-            ...prev,
-            correctWords:
-              prev.correctWords + (currentAccuracy === 100 ? words : 0),
-            completedSentences: currentProgress,
-            totalInputs: prev.totalInputs + 1,
-          };
+        // 다음 문장으로 이동
+        const newSentences = [..._remainingSentences];
+        newSentences.shift();
+        setRemainingSentences(newSentences);
+        setCurrentSentence(newSentences[0]);
+        setUserInput("");
 
-          // 다음 문장으로 이동
-          setRemainingSentences((prevSentences) => {
-            const newSentences = [...prevSentences];
-            newSentences.shift();
-            setCurrentSentence(newSentences[0]);
-            setUserInput("");
-            return newSentences;
-          });
-
-          return newStats;
-        });
+        // 게임 통계 업데이트
+        setGameStats((prev) => ({
+          ...prev,
+          correctWords:
+            prev.correctWords + (currentAccuracy === 100 ? words : 0),
+          completedSentences: currentProgress,
+          totalInputs: prev.totalInputs + 1,
+        }));
       }
     } catch (err) {
       console.error("키 입력 처리 중 오류 발생:", err);
@@ -726,6 +720,7 @@ const TypingGame = () => {
     setIsLoading(false);
     setScores([]);
     setBestScore(0);
+    setShowResult(false);
     setGameStats({
       correctWords: 0,
       totalTime: 0,
@@ -748,21 +743,9 @@ const TypingGame = () => {
   };
 
   const restartGame = () => {
+    resetGame();
     setSelectedLanguage(null);
     setSelectedDifficulty("");
-    setCurrentSentence("");
-    setUserInput("");
-    setRemainingSentences([]);
-    setGameStats({
-      typingSpeed: 0,
-      accuracy: 0,
-      completedSentences: 0,
-      correctWords: 0,
-      elapsedTime: 0,
-      averageAccuracy: 0,
-    });
-    setShowResult(false);
-    setIsGameActive(false);
   };
 
   return (
@@ -872,7 +855,9 @@ const TypingGame = () => {
               </ResultStatItem>
               <ResultStatItem>
                 <ResultStatLabel>정확도</ResultStatLabel>
-                <ResultStatValue>{gameStats.accuracy}%</ResultStatValue>
+                <ResultStatValue>
+                  {Math.round(gameStats.averageAccuracy)}%
+                </ResultStatValue>
               </ResultStatItem>
               <ResultStatItem>
                 <ResultStatLabel>걸린 시간</ResultStatLabel>
