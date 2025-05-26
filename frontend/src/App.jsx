@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -74,13 +74,26 @@ function App() {
   const user = useUserStore((state) => state.user);
   const setUser = useUserStore((state) => state.setUser);
   const logout = useUserStore((state) => state.logout);
+  const [isLoading, setIsLoading] = useState(true);
+  const [gameKey, setGameKey] = useState(0);
 
   useEffect(() => {
     const currentUser = JSON.parse(localStorage.getItem("currentUser"));
     if (currentUser) {
       setUser({ username: currentUser.username });
     }
+    setIsLoading(false);
   }, [setUser]);
+
+  if (isLoading) {
+    return (
+      <AppContainer>
+        <div style={{ textAlign: "center", padding: "2rem" }}>
+          <h2>로딩 중...</h2>
+        </div>
+      </AppContainer>
+    );
+  }
 
   return (
     <Router>
@@ -92,7 +105,12 @@ function App() {
               <>
                 <UserInfo>
                   <span>안녕하세요, {user.username}님!</span>
-                  <NavLink to="/">게임</NavLink>
+                  <NavLink
+                    to="/"
+                    onClick={() => setGameKey((prev) => prev + 1)}
+                  >
+                    게임
+                  </NavLink>
                   <NavLink to="/ranking">랭킹</NavLink>
                   <NavLink to="/mypage">마이페이지</NavLink>
                   <Button onClick={logout}>로그아웃</Button>
@@ -109,7 +127,9 @@ function App() {
         <Routes>
           <Route
             path="/"
-            element={user ? <TypingGame /> : <Navigate to="/login" />}
+            element={
+              user ? <TypingGame key={gameKey} /> : <Navigate to="/login" />
+            }
           />
           <Route
             path="/login"

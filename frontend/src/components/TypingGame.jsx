@@ -420,19 +420,25 @@ const TypingGame = () => {
       const res = await axios.get(
         `/api/quotes?limit=30&minLength=${minLength}&maxLength=${maxLength}`
       );
-      const quotes = res.data.results.map((item) => item.content);
+      const quotes = res.data.results;
       const translated = await Promise.all(
         quotes.map(async (quote) => {
           try {
             const response = await axios.post("/api/translate", {
-              text: quote,
+              text: quote.content,
               source: "en",
               target: "ko",
             });
-            return response.data.translatedText;
+            return {
+              content: response.data.translatedText,
+              author: quote.author,
+            };
           } catch (err) {
             console.error("번역 중 오류:", err);
-            return quote;
+            return {
+              content: quote.content,
+              author: quote.author,
+            };
           }
         })
       );
