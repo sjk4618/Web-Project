@@ -479,45 +479,50 @@ const TypingGame = () => {
   };
 
   const handleKeyDown = async (e) => {
-    if (e.key === "Enter" && isGameActive) {
-      e.preventDefault();
-      const words =
-        typeof currentSentence === "object"
-          ? currentSentence.content.split(" ").length
-          : currentSentence.split(" ").length;
+    try {
+      if (e.key === "Enter" && isGameActive) {
+        e.preventDefault();
+        const words =
+          typeof currentSentence === "object"
+            ? currentSentence.content.split(" ").length
+            : currentSentence.split(" ").length;
 
-      const content =
-        typeof currentSentence === "object"
-          ? currentSentence.content
-          : currentSentence;
-      const currentAccuracy =
-        selectedLanguage === "ko"
-          ? calculateHangulAccuracy(userInput, content)
-          : calculateEnglishAccuracy(userInput, content);
+        const content =
+          typeof currentSentence === "object"
+            ? currentSentence.content
+            : currentSentence;
+        const currentAccuracy =
+          selectedLanguage === "ko"
+            ? calculateHangulAccuracy(userInput, content)
+            : calculateEnglishAccuracy(userInput, content);
 
-      setGameStats((prev) => {
-        const newCompletedSentences = prev.completedSentences + 1;
-        return {
-          ...prev,
-          correctWords:
-            prev.correctWords + (currentAccuracy === 100 ? words : 0),
-          completedSentences: newCompletedSentences,
-          totalInputs: prev.totalInputs + 1,
-        };
-      });
+        setGameStats((prev) => {
+          const newCompletedSentences = prev.completedSentences + 1;
+          return {
+            ...prev,
+            correctWords:
+              prev.correctWords + (currentAccuracy === 100 ? words : 0),
+            completedSentences: newCompletedSentences,
+            totalInputs: prev.totalInputs + 1,
+          };
+        });
 
-      if (gameStats.completedSentences + 1 >= 10) {
-        endGame();
-        return;
+        if (gameStats.completedSentences + 1 >= 10) {
+          endGame();
+          return;
+        }
+
+        setRemainingSentences((prev) => {
+          const newSentences = [...prev];
+          newSentences.shift();
+          setCurrentSentence(newSentences[0]);
+          setUserInput("");
+          return newSentences;
+        });
       }
-
-      setRemainingSentences((prev) => {
-        const newSentences = [...prev];
-        newSentences.shift();
-        setCurrentSentence(newSentences[0]);
-        setUserInput("");
-        return newSentences;
-      });
+    } catch (err) {
+      console.error("키 입력 처리 중 오류 발생:", err);
+      setError("게임 진행 중 오류가 발생했습니다. 다시 시도해주세요.");
     }
   };
 

@@ -157,47 +157,53 @@ const MyPage = () => {
 
   const [selectedLanguage, setSelectedLanguage] = useState("ko");
   const [selectedDifficulty, setSelectedDifficulty] = useState("easy");
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
-    if (currentUser) {
-      const users = JSON.parse(localStorage.getItem("users") || "[]");
-      const user = users.find((u) => u.username === currentUser.username);
+    try {
+      const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+      if (currentUser) {
+        const users = JSON.parse(localStorage.getItem("users") || "[]");
+        const user = users.find((u) => u.username === currentUser.username);
 
-      if (user && Array.isArray(user.scores)) {
-        const scores = user.scores;
+        if (user && Array.isArray(user.scores)) {
+          const scores = user.scores;
 
-        // 한글/영어 타자 기록 분리
-        const koScores = scores.filter((score) => score.language === "ko");
-        const enScores = scores.filter((score) => score.language === "en");
+          // 한글/영어 타자 기록 분리
+          const koScores = scores.filter((score) => score.language === "ko");
+          const enScores = scores.filter((score) => score.language === "en");
 
-        // 한글 타자 통계 (난이도별)
-        const koEasyScores = koScores.filter(
-          (score) => score.difficulty === "easy"
-        );
-        const koHardScores = koScores.filter(
-          (score) => score.difficulty === "hard"
-        );
+          // 한글 타자 통계 (난이도별)
+          const koEasyScores = koScores.filter(
+            (score) => score.difficulty === "easy"
+          );
+          const koHardScores = koScores.filter(
+            (score) => score.difficulty === "hard"
+          );
 
-        // 영어 타자 통계 (난이도별)
-        const enEasyScores = enScores.filter(
-          (score) => score.difficulty === "easy"
-        );
-        const enHardScores = enScores.filter(
-          (score) => score.difficulty === "hard"
-        );
+          // 영어 타자 통계 (난이도별)
+          const enEasyScores = enScores.filter(
+            (score) => score.difficulty === "easy"
+          );
+          const enHardScores = enScores.filter(
+            (score) => score.difficulty === "hard"
+          );
 
-        setUserStats({
-          koStats: {
-            easy: calculateStats(koEasyScores),
-            hard: calculateStats(koHardScores),
-          },
-          enStats: {
-            easy: calculateStats(enEasyScores),
-            hard: calculateStats(enHardScores),
-          },
-        });
+          setUserStats({
+            koStats: {
+              easy: calculateStats(koEasyScores),
+              hard: calculateStats(koHardScores),
+            },
+            enStats: {
+              easy: calculateStats(enEasyScores),
+              hard: calculateStats(enHardScores),
+            },
+          });
+        }
       }
+    } catch (err) {
+      console.error("사용자 통계 로딩 중 오류 발생:", err);
+      setError("사용자 통계를 불러오는 중 오류가 발생했습니다.");
     }
   }, []);
 
