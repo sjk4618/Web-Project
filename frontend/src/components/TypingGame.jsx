@@ -396,17 +396,31 @@ const TypingGame = () => {
       if (language === "ko") {
         // 한글 타자의 경우 자모 단위로 정확도 계산
         const accuracy = calculateHangulAccuracy(value, content);
-        setGameStats((prev) => ({
-          ...prev,
-          averageAccuracy: accuracy,
-        }));
+        setGameStats((prev) => {
+          const newTotalAccuracy =
+            prev.totalAccuracy - prev.averageAccuracy + accuracy;
+          const newAverageAccuracy =
+            newTotalAccuracy / (prev.completedSentences + 1);
+          return {
+            ...prev,
+            averageAccuracy: Math.round(newAverageAccuracy * 100) / 100,
+            totalAccuracy: newTotalAccuracy,
+          };
+        });
       } else {
         // 영어 타자의 경우 문자 단위로 정확도 계산
         const accuracy = calculateEnglishAccuracy(value, content);
-        setGameStats((prev) => ({
-          ...prev,
-          averageAccuracy: accuracy,
-        }));
+        setGameStats((prev) => {
+          const newTotalAccuracy =
+            prev.totalAccuracy - prev.averageAccuracy + accuracy;
+          const newAverageAccuracy =
+            newTotalAccuracy / (prev.completedSentences + 1);
+          return {
+            ...prev,
+            averageAccuracy: Math.round(newAverageAccuracy * 100) / 100,
+            totalAccuracy: newTotalAccuracy,
+          };
+        });
       }
     }
   };
@@ -430,17 +444,12 @@ const TypingGame = () => {
 
       setGameStats((prev) => {
         const newCompletedSentences = prev.completedSentences + 1;
-        const newTotalAccuracy = prev.totalAccuracy + currentAccuracy;
-        const newAverageAccuracy = newTotalAccuracy / newCompletedSentences;
-
         return {
           ...prev,
           correctWords:
             prev.correctWords + (currentAccuracy === 100 ? words : 0),
           completedSentences: newCompletedSentences,
-          totalAccuracy: newTotalAccuracy,
           totalInputs: prev.totalInputs + 1,
-          averageAccuracy: Math.round(newAverageAccuracy * 100) / 100,
         };
       });
 
