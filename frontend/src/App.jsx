@@ -99,7 +99,7 @@ function App() {
     <Router>
       <AppContainer>
         <Header>
-          <Title>명언 타이핑 게임</Title>
+          <Title>랜덤 명언 타이핑 게임</Title>
           <Nav>
             {user ? (
               <>

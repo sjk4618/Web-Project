@@ -301,6 +301,24 @@ const TypingGame = () => {
     return Math.round(accuracy * 100) / 100;
   };
 
+  const calculateEnglishAccuracy = (input, target) => {
+    if (!input || !target) return 0;
+
+    let correctCount = 0;
+    const minLength = Math.min(input.length, target.length);
+
+    // 문자 단위로 비교
+    for (let i = 0; i < minLength; i++) {
+      if (input[i] === target[i]) {
+        correctCount++;
+      }
+    }
+
+    // 정확도 계산 (소수점 둘째 자리까지)
+    const accuracy = (correctCount / target.length) * 100;
+    return Math.round(accuracy * 100) / 100;
+  };
+
   useEffect(() => {
     resetGame();
   }, []);
@@ -376,40 +394,18 @@ const TypingGame = () => {
           : currentSentence;
 
       if (language === "ko") {
-        // 한글 타자의 경우 전체 문장의 낱자 단위로 정확도 계산
-        const targetJamo = content
-          .split("")
-          .flatMap((char) => decomposeHangul(char));
-        const inputJamo = value
-          .split("")
-          .flatMap((char) => decomposeHangul(char));
-
-        setGameStats((prev) => {
-          const newTotalJamo = targetJamo.length;
-          const newCorrectJamo = inputJamo.filter(
-            (jamo, index) => jamo === targetJamo[index]
-          ).length;
-
-          // 정확도 계산: (정확하게 입력한 낱자 수 / 전체 입력해야 할 낱자 수) × 100
-          const newAccuracy = (newCorrectJamo / newTotalJamo) * 100;
-
-          return {
-            ...prev,
-            totalJamo: newTotalJamo,
-            totalCorrectJamo: newCorrectJamo,
-            averageAccuracy: Math.round(newAccuracy * 100) / 100,
-          };
-        });
-      } else {
-        // 영어 타자의 경우 전체 문장을 기준으로 정확도 계산
-        const correctChars = value
-          .split("")
-          .filter((char, index) => char === content[index]).length;
-        const accuracy = (correctChars / content.length) * 100;
-
+        // 한글 타자의 경우 자모 단위로 정확도 계산
+        const accuracy = calculateHangulAccuracy(value, content);
         setGameStats((prev) => ({
           ...prev,
-          averageAccuracy: Math.round(accuracy * 100) / 100,
+          averageAccuracy: accuracy,
+        }));
+      } else {
+        // 영어 타자의 경우 문자 단위로 정확도 계산
+        const accuracy = calculateEnglishAccuracy(value, content);
+        setGameStats((prev) => ({
+          ...prev,
+          averageAccuracy: accuracy,
         }));
       }
     }
@@ -430,15 +426,23 @@ const TypingGame = () => {
       const currentAccuracy =
         language === "ko"
           ? calculateHangulAccuracy(userInput, content)
-          : calculateAccuracy();
+          : calculateEnglishAccuracy(userInput, content);
 
-      setGameStats((prev) => ({
-        ...prev,
-        correctWords: prev.correctWords + (currentAccuracy === 100 ? words : 0),
-        completedSentences: prev.completedSentences + 1,
-        totalAccuracy: prev.totalAccuracy + currentAccuracy,
-        totalInputs: prev.totalInputs + 1,
-      }));
+      setGameStats((prev) => {
+        const newCompletedSentences = prev.completedSentences + 1;
+        const newTotalAccuracy = prev.totalAccuracy + currentAccuracy;
+        const newAverageAccuracy = newTotalAccuracy / newCompletedSentences;
+
+        return {
+          ...prev,
+          correctWords:
+            prev.correctWords + (currentAccuracy === 100 ? words : 0),
+          completedSentences: newCompletedSentences,
+          totalAccuracy: newTotalAccuracy,
+          totalInputs: prev.totalInputs + 1,
+          averageAccuracy: Math.round(newAverageAccuracy * 100) / 100,
+        };
+      });
 
       if (gameStats.completedSentences + 1 >= 10) {
         endGame();
@@ -628,21 +632,6 @@ const TypingGame = () => {
     } catch (err) {
       console.error("점수 저장 중 오류:", err);
     }
-  };
-
-  const calculateAccuracy = () => {
-    if (!userInput || !currentSentence) return 0;
-    let correct = 0;
-    const content =
-      typeof currentSentence === "object"
-        ? currentSentence.content
-        : currentSentence;
-    for (let i = 0; i < userInput.length; i++) {
-      if (userInput[i] === content[i]) {
-        correct++;
-      }
-    }
-    return Math.round((correct / userInput.length) * 100) || 0;
   };
 
   const renderText = () => {
