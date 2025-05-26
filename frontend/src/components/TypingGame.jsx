@@ -254,7 +254,6 @@ const TypingGame = () => {
     return `${minutes}분 ${remainingSeconds}초`;
   };
 
-  // 한글 자모 분리 함수
   const decomposeHangul = (char) => {
     const code = char.charCodeAt(0);
     if (code < 0xac00 || code > 0xd7a3) return [char]; // 한글이 아닌 경우
@@ -270,13 +269,6 @@ const TypingGame = () => {
     if (final > 0) result.push(String.fromCharCode(0x11a7 + final)); // 종성
 
     return result;
-  };
-
-  // 문자열의 전체 낱자 수 계산
-  const countTotalJamo = (text) => {
-    return text.split("").reduce((count, char) => {
-      return count + decomposeHangul(char).length;
-    }, 0);
   };
 
   // 한글 타수 계산 함수 수정
@@ -384,16 +376,19 @@ const TypingGame = () => {
           : currentSentence;
 
       if (language === "ko") {
-        // 한글 타자의 경우 낱자 단위로 정확도 계산
-        const targetJamo = decomposeHangul(content[value.length - 1]);
-        const inputJamo = decomposeHangul(newChar);
+        // 한글 타자의 경우 전체 문장의 낱자 단위로 정확도 계산
+        const targetJamo = content
+          .split("")
+          .flatMap((char) => decomposeHangul(char));
+        const inputJamo = value
+          .split("")
+          .flatMap((char) => decomposeHangul(char));
 
         setGameStats((prev) => {
-          const newTotalJamo = prev.totalJamo + targetJamo.length;
-          const newCorrectJamo =
-            prev.totalCorrectJamo +
-            inputJamo.filter((jamo, index) => jamo === targetJamo[index])
-              .length;
+          const newTotalJamo = targetJamo.length;
+          const newCorrectJamo = inputJamo.filter(
+            (jamo, index) => jamo === targetJamo[index]
+          ).length;
 
           // 정확도 계산: (정확하게 입력한 낱자 수 / 전체 입력해야 할 낱자 수) × 100
           const newAccuracy = (newCorrectJamo / newTotalJamo) * 100;
