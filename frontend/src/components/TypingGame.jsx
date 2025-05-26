@@ -200,7 +200,7 @@ const TypingGame = () => {
   const [, setSentenceQueue] = useState([]);
   const inputRef = useRef(null);
   const startTimeRef = useRef(null);
-  const lastKeystrokeTimeRef = useRef(null);
+  const keystrokeTimesRef = useRef([]);
 
   useEffect(() => {
     let timer;
@@ -262,18 +262,12 @@ const TypingGame = () => {
       // 현재 문장의 타수 계산
       const correctKeystrokes = calculateHangulKeystrokes(correctInput);
 
-      // 마지막 키 입력 시간이 없으면 현재 시간으로 설정
-      if (!lastKeystrokeTimeRef.current) {
-        lastKeystrokeTimeRef.current = currentTime;
-      }
+      // 최근 10초 동안의 타수 계산
+      const recentKeystrokes = keystrokeTimesRef.current.filter(
+        (time) => currentTime - time <= 10000
+      ).length;
 
-      // 마지막 키 입력 이후의 시간으로 타수 계산
-      const timeSinceLastKeystroke =
-        (currentTime - lastKeystrokeTimeRef.current) / 1000;
-      const typingSpeed =
-        timeSinceLastKeystroke > 0
-          ? Math.round((correctKeystrokes / timeSinceLastKeystroke) * 60)
-          : 0;
+      const typingSpeed = Math.round((recentKeystrokes / 10) * 60); // 10초 동안의 타수를 분당 타수로 변환
 
       setGameStats((prev) => ({
         ...prev,
@@ -319,7 +313,7 @@ const TypingGame = () => {
       setTimeLeft(60);
       setIsGameActive(true);
       startTimeRef.current = Date.now();
-      lastKeystrokeTimeRef.current = null;
+      keystrokeTimesRef.current = [];
       setGameStats({
         correctWords: 0,
         totalTime: 0,
@@ -340,7 +334,7 @@ const TypingGame = () => {
       setTimeLeft(60);
       setIsGameActive(true);
       startTimeRef.current = Date.now();
-      lastKeystrokeTimeRef.current = null;
+      keystrokeTimesRef.current = [];
       setGameStats({
         correctWords: 0,
         totalTime: 0,
@@ -360,7 +354,11 @@ const TypingGame = () => {
   const handleInputChange = (e) => {
     const value = e.target.value;
     setUserInput(value);
-    lastKeystrokeTimeRef.current = Date.now();
+
+    // 새로운 키가 입력될 때마다 현재 시간을 배열에 추가
+    if (value.length > userInput.length) {
+      keystrokeTimesRef.current.push(Date.now());
+    }
   };
 
   const handleKeyDown = async (e) => {
@@ -387,7 +385,6 @@ const TypingGame = () => {
         }
         setCurrentSentence(newQueue[0]);
         setUserInput("");
-        lastKeystrokeTimeRef.current = null;
         return newQueue;
       });
     }
