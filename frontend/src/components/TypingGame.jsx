@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
-import { sentences } from "../data/sentences";
 import { ENGLISH_QUOTES } from "../constants/englishQuotes";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -229,6 +228,54 @@ const Timer = styled.div`
   font-weight: bold;
 `;
 
+const ErrorPopup = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+`;
+
+const ErrorContent = styled.div`
+  background: white;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+`;
+
+const ErrorTitle = styled.h3`
+  color: #ff4444;
+  margin-bottom: 1rem;
+`;
+
+const ErrorMessage = styled.p`
+  color: #666;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+`;
+
+const ErrorButton = styled.button`
+  background: #4caf50;
+  color: white;
+  border: none;
+  padding: 0.8rem 2rem;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+
+  &:hover {
+    background: #45a049;
+  }
+`;
+
 const TypingGame = () => {
   const [selectedLanguage, setSelectedLanguage] = useState(null);
   const [selectedDifficulty, setSelectedDifficulty] = useState("");
@@ -253,6 +300,7 @@ const TypingGame = () => {
   const startTimeRef = useRef(null);
   const keystrokeTimesRef = useRef([]);
   const lastKeystrokeTimeRef = useRef(null);
+  const [error, setError] = useState(null);
 
   const formatElapsedTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
@@ -478,6 +526,7 @@ const TypingGame = () => {
     if (!selectedLanguage) return;
 
     setIsLoading(true);
+    setError(null);
     try {
       let initialSentences;
       if (selectedLanguage === "ko") {
@@ -530,35 +579,9 @@ const TypingGame = () => {
       }
     } catch (err) {
       console.error("게임 시작 중 오류 발생:", err);
-      const localSentences = sentences[selectedDifficulty].slice(0, 10);
-      setRemainingSentences(localSentences);
-      setCurrentSentence(localSentences[0]);
-      setUserInput("");
-      setIsGameActive(true);
-      startTimeRef.current = Date.now();
-      lastKeystrokeTimeRef.current = Date.now();
-      keystrokeTimesRef.current = [];
-      setGameStats({
-        correctWords: 0,
-        totalTime: 0,
-        averageAccuracy: 100,
-        typingSpeed: 0,
-        totalKeystrokes: 0,
-        correctKeystrokes: 0,
-        elapsedTime: 0,
-        completedSentences: 0,
-        totalAccuracy: 0,
-        totalInputs: 0,
-        totalCorrectChars: 0,
-        totalChars: 0,
-        totalDecomposedInput: "",
-        totalDecomposedTarget: "",
-        totalCorrectJamo: 0,
-        totalJamo: 0,
-      });
-      if (inputRef.current) {
-        inputRef.current.focus();
-      }
+      setError(
+        "서버와의 통신 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -592,17 +615,14 @@ const TypingGame = () => {
             };
           } catch (err) {
             console.error("번역 중 오류:", err);
-            return {
-              content: quote.content,
-              author: quote.author,
-            };
+            throw new Error("번역 중 오류가 발생했습니다.");
           }
         })
       );
       return translated;
     } catch (err) {
       console.error("Quote API 에러 발생:", err);
-      return ENGLISH_QUOTES.slice(0, 10);
+      throw new Error("명언을 가져오는 중 오류가 발생했습니다.");
     }
   };
 
@@ -731,6 +751,15 @@ const TypingGame = () => {
   return (
     <Container>
       <Title>타자 게임</Title>
+      {error && (
+        <ErrorPopup>
+          <ErrorContent>
+            <ErrorTitle>오류 발생</ErrorTitle>
+            <ErrorMessage>{error}</ErrorMessage>
+            <ErrorButton onClick={() => setError(null)}>확인</ErrorButton>
+          </ErrorContent>
+        </ErrorPopup>
+      )}
       {_isLoading && (
         <LoadingOverlay>
           <LoadingSpinner />

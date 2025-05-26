@@ -48,12 +48,38 @@ const DifficultyButton = styled(LanguageButton)``;
 
 const ScoreExplanation = styled.div`
   background: #f8f9fa;
-  padding: 1rem;
+  padding: 1.5rem;
   border-radius: 5px;
   margin-bottom: 2rem;
-  font-size: 0.9rem;
-  color: #666;
-  line-height: 1.5;
+  font-size: 1rem;
+  color: #333;
+  line-height: 1.6;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+
+  h3 {
+    color: #4caf50;
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0;
+  }
+
+  li {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+    position: relative;
+
+    &:before {
+      content: "•";
+      color: #4caf50;
+      position: absolute;
+      left: 0;
+    }
+  }
 `;
 
 const RankingList = styled.div`
@@ -138,10 +164,11 @@ const Ranking = () => {
       }))
     );
 
-    // 총점 계산: 타수 + 정확도 - 시간(초)
+    // 총점 계산: (타수 × 1) + (정확도 × 2) - (시간 × 0.5)
     const scoresWithTotal = allScores.map((score) => ({
       ...score,
-      totalScore: score.typingSpeed + score.accuracy - score.elapsedTime,
+      totalScore:
+        score.typingSpeed * 1 + score.accuracy * 2 - score.elapsedTime * 0.5,
     }));
 
     // 선택된 언어와 난이도에 따라 필터링
@@ -175,10 +202,21 @@ const Ranking = () => {
       <Title>랭킹</Title>
 
       <ScoreExplanation>
-        <h3>총점 계산 방법</h3>
-        <p>총점 = 타수 + 정확도 - 걸린 시간(초)</p>
+        <h3>랭킹 점수 계산 방법</h3>
+        <p>총점 = (타수 × 1) + (정확도 × 2) - (걸린 시간 × 0.5)</p>
         <p>예시: 타수 300타/분, 정확도 95%, 걸린 시간 120초인 경우</p>
-        <p>총점 = 300 + 95 - 120 = 275점</p>
+        <p>
+          총점 = (300 × 1) + (95 × 2) - (120 × 0.5) = 300 + 190 - 60 = 430점
+        </p>
+        <p>각 요소별 가중치:</p>
+        <ul>
+          <li>타수: 1배 (기본) - 타이핑 속도를 나타내는 기본 지표</li>
+          <li>정확도: 2배 (정확한 타이핑 강조) - 정확한 타이핑이 매우 중요</li>
+          <li>
+            시간: 0.5배 (시간 페널티 완화) - 시간에 대한 부담을 줄여 편안한 게임
+            플레이
+          </li>
+        </ul>
       </ScoreExplanation>
 
       <LanguageSelector>
