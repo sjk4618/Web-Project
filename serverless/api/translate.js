@@ -1,5 +1,5 @@
 // serverless/api/translate.js
-import axios from 'axios';
+import axios from "axios";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -8,25 +8,28 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { text, source = "en", target = "ko" } = req.body || req.query;
-
-    const clientId = process.env.PAPAGO_CLIENT_ID;
-    const clientSecret = process.env.PAPAGO_CLIENT_SECRET;
+    const { text, source = "EN", target = "KO" } = req.body || req.query;
+    const apiKey = process.env.DEEPL_API_KEY;
 
     const response = await axios.post(
-      "https://openapi.naver.com/v1/papago/n2mt",
-      new URLSearchParams({ source, target, text }),
+      "https://api-free.deepl.com/v2/translate",
+      new URLSearchParams({
+        auth_key: apiKey,
+        text,
+        source_lang: source,
+        target_lang: target,
+      }),
       {
         headers: {
-          "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-          "X-Naver-Client-Id": clientId,
-          "X-Naver-Client-Secret": clientSecret,
+          "Content-Type": "application/x-www-form-urlencoded",
         },
       }
     );
 
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.status(200).json({ translatedText: response.data.message.result.translatedText });
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res
+      .status(200)
+      .json({ translatedText: response.data.translations[0].text });
   } catch (err) {
     res.status(500).json({ error: "Translation failed", details: err.message });
   }
