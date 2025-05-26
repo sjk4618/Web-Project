@@ -351,16 +351,37 @@ const TypingGame = () => {
           : currentSentence;
       const isCorrect = newChar === content[value.length - 1];
 
-      setGameStats((prev) => ({
-        ...prev,
-        totalCorrectChars: prev.totalCorrectChars + (isCorrect ? 1 : 0),
-        totalChars: prev.totalChars + 1,
-        averageAccuracy: Math.round(
-          ((prev.totalCorrectChars + (isCorrect ? 1 : 0)) /
-            (prev.totalChars + 1)) *
-            100
-        ),
-      }));
+      // 한글 타자의 경우 자모 분리하여 정확도 계산
+      if (language === "ko") {
+        const correctDecomposed = decomposeHangul(content[value.length - 1]);
+        const inputDecomposed = decomposeHangul(newChar);
+        const correctCount = inputDecomposed.filter(
+          (char, idx) => char === correctDecomposed[idx]
+        ).length;
+
+        setGameStats((prev) => ({
+          ...prev,
+          totalCorrectChars: prev.totalCorrectChars + correctCount,
+          totalChars: prev.totalChars + correctDecomposed.length,
+          averageAccuracy: Math.round(
+            ((prev.totalCorrectChars + correctCount) /
+              (prev.totalChars + correctDecomposed.length)) *
+              100
+          ),
+        }));
+      } else {
+        // 영어 타자는 기존 방식대로 계산
+        setGameStats((prev) => ({
+          ...prev,
+          totalCorrectChars: prev.totalCorrectChars + (isCorrect ? 1 : 0),
+          totalChars: prev.totalChars + 1,
+          averageAccuracy: Math.round(
+            ((prev.totalCorrectChars + (isCorrect ? 1 : 0)) /
+              (prev.totalChars + 1)) *
+              100
+          ),
+        }));
+      }
     }
   };
 
