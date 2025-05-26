@@ -473,8 +473,6 @@ const TypingGame = () => {
         const newSentences = [..._remainingSentences];
         newSentences.shift();
         setRemainingSentences(newSentences);
-        setCurrentSentence(newSentences[0]);
-        setUserInput("");
 
         // 게임 통계 업데이트
         setGameStats((prev) => {
@@ -490,6 +488,14 @@ const TypingGame = () => {
             averageAccuracy: Math.round(newAverageAccuracy * 100) / 100,
           };
         });
+
+        // 마지막 문장이 아닌 경우에만 다음 문장 설정
+        if (newSentences.length > 0) {
+          setCurrentSentence(newSentences[0]);
+          setUserInput("");
+        } else {
+          endGame();
+        }
       }
     } catch (err) {
       console.error("키 입력 처리 중 오류 발생:", err);
