@@ -1,29 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
-import { Line } from "react-chartjs-2";
 import { sentences } from "../data/sentences";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-} from "chart.js";
 import { ENGLISH_QUOTES } from "../constants/englishQuotes";
 import axios from "axios";
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
-);
 
 const Container = styled.div`
   max-width: 800px;
@@ -211,7 +190,7 @@ const TypingGame = () => {
     elapsedTime: 0,
     completedSentences: 0,
   });
-  const [sentenceQueue, setSentenceQueue] = useState([]);
+  const [_remainingSentences, setRemainingSentences] = useState([]);
   const inputRef = useRef(null);
   const startTimeRef = useRef(null);
   const keystrokeTimesRef = useRef([]);
@@ -337,12 +316,12 @@ const TypingGame = () => {
         return;
       }
 
-      setSentenceQueue((prevQueue) => {
-        const newQueue = [...prevQueue];
-        newQueue.shift();
-        setCurrentSentence(newQueue[0]);
+      setRemainingSentences((prev) => {
+        const newSentences = [...prev];
+        newSentences.shift();
+        setCurrentSentence(newSentences[0]);
         setUserInput("");
-        return newQueue;
+        return newSentences;
       });
     }
   };
@@ -365,7 +344,7 @@ const TypingGame = () => {
         }));
       }
 
-      setSentenceQueue(initialSentences.slice(0, 10));
+      setRemainingSentences(initialSentences.slice(0, 10));
       setCurrentSentence(initialSentences[0]);
       setUserInput("");
       setIsGameActive(true);
@@ -388,7 +367,7 @@ const TypingGame = () => {
     } catch (err) {
       console.error("게임 시작 중 오류 발생:", err);
       const localSentences = sentences[difficulty].slice(0, 10);
-      setSentenceQueue(localSentences);
+      setRemainingSentences(localSentences);
       setCurrentSentence(localSentences[0]);
       setUserInput("");
       setIsGameActive(true);
@@ -518,18 +497,6 @@ const TypingGame = () => {
         )}
       </>
     );
-  };
-
-  const chartData = {
-    labels: scores.map((score) => score.date),
-    datasets: [
-      {
-        label: "정확도 (%)",
-        data: scores.map((score) => score.accuracy),
-        borderColor: "#2196F3",
-        tension: 0.1,
-      },
-    ],
   };
 
   return (
