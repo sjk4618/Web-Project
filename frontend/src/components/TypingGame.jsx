@@ -195,6 +195,7 @@ const TypingGame = () => {
     averageAccuracy: 0,
     typingSpeed: 0,
     totalKeystrokes: 0,
+    correctKeystrokes: 0,
   });
   const [, setSentenceQueue] = useState([]);
   const inputRef = useRef(null);
@@ -223,16 +224,18 @@ const TypingGame = () => {
 
   useEffect(() => {
     if (isGameActive) {
-      const elapsedTime = (Date.now() - startTimeRef.current) / 1000 / 60; // 분 단위
-      const totalCharacters = userInput.length; // 실제 입력된 문자 수 사용
+      const elapsedTime = (Date.now() - startTimeRef.current) / 1000;
+      const correctCharacters = userInput
+        .split("")
+        .filter((char, index) => char === currentSentence[index]).length;
 
       setGameStats((prev) => ({
         ...prev,
-        totalKeystrokes: totalCharacters,
-        typingSpeed: Math.round(totalCharacters / elapsedTime), // 분당 타수 계산
+        correctKeystrokes: correctCharacters,
+        typingSpeed: Math.round((correctCharacters / elapsedTime) * 60),
       }));
     }
-  }, [userInput, isGameActive]);
+  }, [userInput, isGameActive, currentSentence]);
 
   const fetchAndTranslate30Quotes = async () => {
     try {
@@ -276,6 +279,7 @@ const TypingGame = () => {
         averageAccuracy: 0,
         typingSpeed: 0,
         totalKeystrokes: 0,
+        correctKeystrokes: 0,
       });
       if (inputRef.current) {
         inputRef.current.focus();
@@ -295,6 +299,7 @@ const TypingGame = () => {
         averageAccuracy: 0,
         typingSpeed: 0,
         totalKeystrokes: 0,
+        correctKeystrokes: 0,
       });
       if (inputRef.current) {
         inputRef.current.focus();
@@ -469,7 +474,9 @@ const TypingGame = () => {
                 <StatItem>
                   <StatLabel>타수</StatLabel>
                   <StatValue>{gameStats.typingSpeed}타/분</StatValue>
-                  <StatDescription>1분당 입력한 글자 수입니다.</StatDescription>
+                  <StatDescription>
+                    정확하게 입력한 글자 수 기준입니다.
+                  </StatDescription>
                 </StatItem>
               </GameStats>
             )}
@@ -499,7 +506,9 @@ const TypingGame = () => {
                   평균 정확도: {Math.round(gameStats.averageAccuracy)}%
                 </ScoreText>
                 <ScoreText>최종 타수: {gameStats.typingSpeed}타/분</ScoreText>
-                <ScoreText>정확한 단어: {gameStats.correctWords}</ScoreText>
+                <ScoreText>
+                  정확한 글자 수: {gameStats.correctKeystrokes}
+                </ScoreText>
                 <Button onClick={startGame}>다시 시작</Button>
               </ResultBox>
             )}
