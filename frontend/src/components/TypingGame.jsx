@@ -316,11 +316,15 @@ const TypingGame = () => {
           typingSpeed = Math.round((recentKeystrokes / 10) * 60);
         }
 
+        // 실시간 정확도 계산
+        const currentAccuracy = calculateAccuracy();
+
         setGameStats((prev) => ({
           ...prev,
           correctKeystrokes,
           typingSpeed,
           elapsedTime,
+          averageAccuracy: currentAccuracy,
         }));
       }, 100); // 0.1초마다 업데이트
     }
@@ -537,9 +541,14 @@ const TypingGame = () => {
   };
 
   const calculateAccuracy = () => {
+    if (!userInput || !currentSentence) return 0;
     let correct = 0;
+    const content =
+      typeof currentSentence === "object"
+        ? currentSentence.content
+        : currentSentence;
     for (let i = 0; i < userInput.length; i++) {
-      if (userInput[i] === currentSentence[i]) {
+      if (userInput[i] === content[i]) {
         correct++;
       }
     }
