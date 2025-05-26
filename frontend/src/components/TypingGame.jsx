@@ -381,6 +381,12 @@ const TypingGame = () => {
         setUserInput("");
         return newSentences;
       });
+
+      // 다음 문장으로 넘어갈 때 정확도 유지
+      setGameStats((prev) => ({
+        ...prev,
+        averageAccuracy: prev.averageAccuracy,
+      }));
     }
   };
 
