@@ -749,33 +749,12 @@ const TypingGame = () => {
 
             {language && (
               <>
-                <DifficultyButtons>
-                  <Button
-                    active={difficulty === "easy"}
-                    onClick={() => setDifficulty("easy")}
-                  >
-                    쉬움
-                  </Button>
-                  <Button
-                    active={difficulty === "hard"}
-                    onClick={() => setDifficulty("hard")}
-                  >
-                    어려움
-                  </Button>
-                </DifficultyButtons>
-
                 {isGameActive && (
                   <>
                     <Timer>
                       경과 시간: {formatElapsedTime(gameStats.elapsedTime)}
                     </Timer>
                     <GameStats>
-                      <StatItem>
-                        <StatLabel>정확도</StatLabel>
-                        <StatValue>
-                          {Math.round(gameStats.averageAccuracy)}%
-                        </StatValue>
-                      </StatItem>
                       <StatItem>
                         <StatLabel>타수</StatLabel>
                         <StatValue>{gameStats.typingSpeed}타/분</StatValue>
@@ -814,11 +793,28 @@ const TypingGame = () => {
                   }
                 />
 
-                {!isGameActive && gameStats.completedSentences === 0 && (
-                  <Button onClick={startGame} disabled={!difficulty}>
-                    게임 시작
-                  </Button>
+                {!isGameActive && !difficulty && (
+                  <DifficultyButtons>
+                    <Button
+                      active={difficulty === "easy"}
+                      onClick={() => setDifficulty("easy")}
+                    >
+                      쉬움
+                    </Button>
+                    <Button
+                      active={difficulty === "hard"}
+                      onClick={() => setDifficulty("hard")}
+                    >
+                      어려움
+                    </Button>
+                  </DifficultyButtons>
                 )}
+
+                {!isGameActive &&
+                  difficulty &&
+                  gameStats.completedSentences === 0 && (
+                    <Button onClick={startGame}>게임 시작</Button>
+                  )}
 
                 {!isGameActive && gameStats.completedSentences >= 10 && (
                   <>
@@ -845,6 +841,7 @@ const TypingGame = () => {
                       <ResultButton
                         onClick={() => {
                           setLanguage(null);
+                          setDifficulty("");
                           startGame();
                         }}
                       >

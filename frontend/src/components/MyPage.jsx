@@ -67,6 +67,19 @@ const ScoreList = styled.div`
   margin-top: 2rem;
 `;
 
+const ScoreHeader = styled.div`
+  padding: 1rem;
+  border-bottom: 2px solid #eee;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+  gap: 1rem;
+  align-items: center;
+  font-weight: bold;
+  background: #f8f9fa;
+  border-radius: 5px;
+  margin-bottom: 1rem;
+`;
+
 const ScoreItem = styled.div`
   padding: 1rem;
   border-bottom: 1px solid #eee;
@@ -80,28 +93,70 @@ const ScoreItem = styled.div`
   }
 `;
 
-const ScoreHeader = styled(ScoreItem)`
-  font-weight: bold;
-  background: #f8f9fa;
+const LanguageSelector = styled.div`
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+`;
+
+const LanguageButton = styled.button`
+  padding: 0.5rem 1rem;
+  border: none;
   border-radius: 5px;
+  background-color: ${(props) => (props.active ? "#4CAF50" : "#ddd")};
+  color: ${(props) => (props.active ? "white" : "#333")};
+  cursor: pointer;
+  font-size: 1rem;
+
+  &:hover {
+    background-color: ${(props) => (props.active ? "#45a049" : "#ccc")};
+  }
+`;
+
+const DifficultySelector = styled(LanguageSelector)`
   margin-bottom: 1rem;
+`;
+
+const ChartContainer = styled.div`
+  margin-top: 2rem;
+  height: 300px;
 `;
 
 const MyPage = () => {
   const [userStats, setUserStats] = useState({
     koStats: {
-      averageAccuracy: 0,
-      averageSpeed: 0,
-      totalGames: 0,
-      scores: [],
+      easy: {
+        averageAccuracy: 0,
+        averageSpeed: 0,
+        totalGames: 0,
+        scores: [],
+      },
+      hard: {
+        averageAccuracy: 0,
+        averageSpeed: 0,
+        totalGames: 0,
+        scores: [],
+      },
     },
     enStats: {
-      averageAccuracy: 0,
-      averageSpeed: 0,
-      totalGames: 0,
-      scores: [],
+      easy: {
+        averageAccuracy: 0,
+        averageSpeed: 0,
+        totalGames: 0,
+        scores: [],
+      },
+      hard: {
+        averageAccuracy: 0,
+        averageSpeed: 0,
+        totalGames: 0,
+        scores: [],
+      },
     },
   });
+
+  const [selectedLanguage, setSelectedLanguage] = useState("ko");
+  const [selectedDifficulty, setSelectedDifficulty] = useState("easy");
 
   useEffect(() => {
     const currentUser = JSON.parse(localStorage.getItem("currentUser"));
@@ -111,119 +166,108 @@ const MyPage = () => {
 
       if (user && Array.isArray(user.scores)) {
         const scores = user.scores;
+
         // 한글/영어 타자 기록 분리
         const koScores = scores.filter((score) => score.language === "ko");
         const enScores = scores.filter((score) => score.language === "en");
 
-        // 한글 타자 통계
-        const koAverageAccuracy =
-          koScores.length > 0
-            ? Math.round(
-                koScores.reduce((acc, curr) => acc + curr.accuracy, 0) /
-                  koScores.length
-              )
-            : 0;
-        const koAverageSpeed =
-          koScores.length > 0
-            ? Math.round(
-                koScores.reduce((acc, curr) => acc + curr.typingSpeed, 0) /
-                  koScores.length
-              )
-            : 0;
+        // 한글 타자 통계 (난이도별)
+        const koEasyScores = koScores.filter(
+          (score) => score.difficulty === "easy"
+        );
+        const koHardScores = koScores.filter(
+          (score) => score.difficulty === "hard"
+        );
 
-        // 영어 타자 통계
-        const enAverageAccuracy =
-          enScores.length > 0
-            ? Math.round(
-                enScores.reduce((acc, curr) => acc + curr.accuracy, 0) /
-                  enScores.length
-              )
-            : 0;
-        const enAverageSpeed =
-          enScores.length > 0
-            ? Math.round(
-                enScores.reduce((acc, curr) => acc + curr.typingSpeed, 0) /
-                  enScores.length
-              )
-            : 0;
+        // 영어 타자 통계 (난이도별)
+        const enEasyScores = enScores.filter(
+          (score) => score.difficulty === "easy"
+        );
+        const enHardScores = enScores.filter(
+          (score) => score.difficulty === "hard"
+        );
 
         setUserStats({
           koStats: {
-            averageAccuracy: koAverageAccuracy,
-            averageSpeed: koAverageSpeed,
-            totalGames: koScores.length,
-            scores: koScores.sort(
-              (a, b) => new Date(b.date) - new Date(a.date)
-            ),
+            easy: calculateStats(koEasyScores),
+            hard: calculateStats(koHardScores),
           },
           enStats: {
-            averageAccuracy: enAverageAccuracy,
-            averageSpeed: enAverageSpeed,
-            totalGames: enScores.length,
-            scores: enScores.sort(
-              (a, b) => new Date(b.date) - new Date(a.date)
-            ),
-          },
-        });
-      } else {
-        setUserStats({
-          koStats: {
-            averageAccuracy: 0,
-            averageSpeed: 0,
-            totalGames: 0,
-            scores: [],
-          },
-          enStats: {
-            averageAccuracy: 0,
-            averageSpeed: 0,
-            totalGames: 0,
-            scores: [],
+            easy: calculateStats(enEasyScores),
+            hard: calculateStats(enHardScores),
           },
         });
       }
     }
   }, []);
 
+  const calculateStats = (scores) => {
+    if (scores.length === 0) {
+      return {
+        averageAccuracy: 0,
+        averageSpeed: 0,
+        totalGames: 0,
+        scores: [],
+      };
+    }
+
+    const averageAccuracy = Math.round(
+      scores.reduce((acc, curr) => acc + curr.accuracy, 0) / scores.length
+    );
+    const averageSpeed = Math.round(
+      scores.reduce((acc, curr) => acc + curr.typingSpeed, 0) / scores.length
+    );
+
+    return {
+      averageAccuracy,
+      averageSpeed,
+      totalGames: scores.length,
+      scores: scores.sort((a, b) => new Date(b.date) - new Date(a.date)),
+    };
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return `${
+      date.getMonth() + 1
+    }/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(
+      2,
+      "0"
+    )}`;
+  };
+
+  const formatElapsedTime = (seconds) => {
+    if (!seconds || isNaN(seconds) || seconds < 0) return "-";
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}분 ${remainingSeconds}초`;
+  };
+
+  const currentStats =
+    userStats[selectedLanguage === "ko" ? "koStats" : "enStats"][
+      selectedDifficulty
+    ];
+
   const chartData = {
-    labels: [...userStats.koStats.scores, ...userStats.enStats.scores]
+    labels: currentStats.scores
       .sort((a, b) => new Date(a.date) - new Date(b.date))
-      .map((score) => {
-        const date = new Date(score.date);
-        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
-          2,
-          "0"
-        )}-${String(date.getDate()).padStart(2, "0")} ${String(
-          date.getHours()
-        ).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
-      }),
+      .map((score) => formatDate(score.date)),
     datasets: [
       {
-        label: "한글 타자 속도 (타/분)",
-        data: userStats.koStats.scores.map((score) => score.typingSpeed),
+        label: "타수 (타/분)",
+        data: currentStats.scores
+          .sort((a, b) => new Date(a.date) - new Date(b.date))
+          .map((score) => score.typingSpeed),
         borderColor: "#4CAF50",
         tension: 0.1,
-        yAxisID: "y1",
       },
       {
-        label: "한글 타자 시간 (초)",
-        data: userStats.koStats.scores.map((score) => score.elapsedTime),
-        borderColor: "#9C27B0",
+        label: "정확도 (%)",
+        data: currentStats.scores
+          .sort((a, b) => new Date(a.date) - new Date(b.date))
+          .map((score) => score.accuracy),
+        borderColor: "#2196F3",
         tension: 0.1,
-        yAxisID: "y2",
-      },
-      {
-        label: "영어 타자 속도 (타/분)",
-        data: userStats.enStats.scores.map((score) => score.typingSpeed),
-        borderColor: "#F44336",
-        tension: 0.1,
-        yAxisID: "y1",
-      },
-      {
-        label: "영어 타자 시간 (초)",
-        data: userStats.enStats.scores.map((score) => score.elapsedTime),
-        borderColor: "#795548",
-        tension: 0.1,
-        yAxisID: "y2",
       },
     ],
   };
@@ -235,127 +279,83 @@ const MyPage = () => {
       intersect: false,
     },
     scales: {
-      y1: {
-        type: "linear",
-        display: true,
-        position: "left",
-        title: {
-          display: true,
-          text: "타수 (타/분)",
-        },
-        min: 0,
-      },
-      y2: {
-        type: "linear",
-        display: true,
-        position: "right",
-        title: {
-          display: true,
-          text: "시간 (초)",
-        },
-        min: 0,
-        grid: {
-          drawOnChartArea: false,
-        },
+      y: {
+        beginAtZero: true,
       },
     },
-  };
-
-  const formatElapsedTime = (seconds) => {
-    if (!seconds || isNaN(seconds) || seconds < 0) return "-";
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = Math.floor(seconds % 60);
-    return `${minutes}분 ${remainingSeconds}초`;
   };
 
   return (
     <Container>
       <MyPageTitle>마이페이지</MyPageTitle>
 
+      <LanguageSelector>
+        <LanguageButton
+          active={selectedLanguage === "ko"}
+          onClick={() => setSelectedLanguage("ko")}
+        >
+          한글 타자
+        </LanguageButton>
+        <LanguageButton
+          active={selectedLanguage === "en"}
+          onClick={() => setSelectedLanguage("en")}
+        >
+          영어 타자
+        </LanguageButton>
+      </LanguageSelector>
+
+      <DifficultySelector>
+        <LanguageButton
+          active={selectedDifficulty === "easy"}
+          onClick={() => setSelectedDifficulty("easy")}
+        >
+          쉬움
+        </LanguageButton>
+        <LanguageButton
+          active={selectedDifficulty === "hard"}
+          onClick={() => setSelectedDifficulty("hard")}
+        >
+          어려움
+        </LanguageButton>
+      </DifficultySelector>
+
       <StatsGrid>
         <StatCard>
-          <StatLabel>한글 타자 평균 정확도</StatLabel>
-          <StatValue>{userStats.koStats.averageAccuracy}%</StatValue>
+          <StatLabel>평균 정확도</StatLabel>
+          <StatValue>{currentStats.averageAccuracy}%</StatValue>
         </StatCard>
         <StatCard>
-          <StatLabel>한글 타자 평균 속도</StatLabel>
-          <StatValue>{userStats.koStats.averageSpeed}타/분</StatValue>
+          <StatLabel>평균 타수</StatLabel>
+          <StatValue>{currentStats.averageSpeed}타/분</StatValue>
         </StatCard>
         <StatCard>
-          <StatLabel>한글 타자 평균 시간</StatLabel>
-          <StatValue>
-            {formatElapsedTime(
-              userStats.koStats.scores.length > 0
-                ? userStats.koStats.scores.reduce(
-                    (acc, curr) => acc + (curr.elapsedTime || 0),
-                    0
-                  ) / userStats.koStats.scores.length
-                : 0
-            )}
-          </StatValue>
-        </StatCard>
-        <StatCard>
-          <StatLabel>한글 타자 게임 수</StatLabel>
-          <StatValue>{userStats.koStats.totalGames}회</StatValue>
-        </StatCard>
-        <StatCard>
-          <StatLabel>영어 타자 평균 정확도</StatLabel>
-          <StatValue>{userStats.enStats.averageAccuracy}%</StatValue>
-        </StatCard>
-        <StatCard>
-          <StatLabel>영어 타자 평균 속도</StatLabel>
-          <StatValue>{userStats.enStats.averageSpeed}타/분</StatValue>
-        </StatCard>
-        <StatCard>
-          <StatLabel>영어 타자 평균 시간</StatLabel>
-          <StatValue>
-            {formatElapsedTime(
-              userStats.enStats.scores.length > 0
-                ? userStats.enStats.scores.reduce(
-                    (acc, curr) => acc + (curr.elapsedTime || 0),
-                    0
-                  ) / userStats.enStats.scores.length
-                : 0
-            )}
-          </StatValue>
-        </StatCard>
-        <StatCard>
-          <StatLabel>영어 타자 게임 수</StatLabel>
-          <StatValue>{userStats.enStats.totalGames}회</StatValue>
+          <StatLabel>게임 수</StatLabel>
+          <StatValue>{currentStats.totalGames}회</StatValue>
         </StatCard>
       </StatsGrid>
 
-      {(userStats.koStats.scores.length > 0 ||
-        userStats.enStats.scores.length > 0) && (
+      {currentStats.scores.length > 0 && (
         <>
           <ScoreList>
             <ScoreHeader>
               <div>날짜</div>
-              <div>타자 종류</div>
               <div>정확도</div>
               <div>타수</div>
               <div>걸린 시간</div>
-              <div>난이도</div>
             </ScoreHeader>
-            {[...userStats.koStats.scores, ...userStats.enStats.scores]
-              .sort((a, b) => new Date(b.date) - new Date(a.date))
-              .map((score, index) => (
-                <ScoreItem key={index}>
-                  <div>{new Date(score.date).toLocaleString()}</div>
-                  <div>
-                    {score.language === "ko" ? "한글 타자" : "영어 타자"}
-                  </div>
-                  <div>{score.accuracy}%</div>
-                  <div>{score.typingSpeed}타/분</div>
-                  <div>{formatElapsedTime(score.elapsedTime)}</div>
-                  <div>{score.difficulty}</div>
-                </ScoreItem>
-              ))}
+            {currentStats.scores.map((score, index) => (
+              <ScoreItem key={index}>
+                <div>{formatDate(score.date)}</div>
+                <div>{score.accuracy}%</div>
+                <div>{score.typingSpeed}타/분</div>
+                <div>{formatElapsedTime(score.elapsedTime)}</div>
+              </ScoreItem>
+            ))}
           </ScoreList>
 
-          <div style={{ marginTop: "2rem", height: "300px" }}>
+          <ChartContainer>
             <Line data={chartData} options={chartOptions} />
-          </div>
+          </ChartContainer>
         </>
       )}
     </Container>
