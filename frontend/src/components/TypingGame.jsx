@@ -401,17 +401,15 @@ const TypingGame = () => {
           };
         });
       } else {
-        // 영어 타자는 기존 방식대로 계산
-        const isCorrect = newChar === content[value.length - 1];
+        // 영어 타자의 경우 전체 문장을 기준으로 정확도 계산
+        const correctChars = value
+          .split("")
+          .filter((char, index) => char === content[index]).length;
+        const accuracy = (correctChars / content.length) * 100;
+
         setGameStats((prev) => ({
           ...prev,
-          totalCorrectChars: prev.totalCorrectChars + (isCorrect ? 1 : 0),
-          totalChars: prev.totalChars + 1,
-          averageAccuracy: Math.round(
-            ((prev.totalCorrectChars + (isCorrect ? 1 : 0)) /
-              (prev.totalChars + 1)) *
-              100
-          ),
+          averageAccuracy: Math.round(accuracy * 100) / 100,
         }));
       }
     }
@@ -551,12 +549,12 @@ const TypingGame = () => {
       let minLength = 0,
         maxLength = 1000;
       if (difficulty === "easy") {
-        maxLength = 50;
+        maxLength = 80;
       } else if (difficulty === "hard") {
-        minLength = 80;
+        minLength = 90;
       }
       const res = await axios.get(
-        `/api/quotes?limit=30&minLength=${minLength}&maxLength=${maxLength}`
+        `/api/quotes?limit=10&minLength=${minLength}&maxLength=${maxLength}`
       );
       const quotes = res.data.results;
       const translated = await Promise.all(
