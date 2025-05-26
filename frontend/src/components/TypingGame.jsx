@@ -547,6 +547,7 @@ const TypingGame = ({ onReset }) => {
       completedSentences: 0,
     });
     setRemainingSentences([]);
+    onReset?.();
   };
 
   return (
