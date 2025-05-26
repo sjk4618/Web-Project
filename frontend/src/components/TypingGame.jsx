@@ -187,6 +187,14 @@ const TypingGame = () => {
           target: "KO",
         });
         translatedQuotes = response.data.translatedTexts;
+        // undefined/null 방지 및 길이 불일치 시 원문 사용
+        if (
+          !Array.isArray(translatedQuotes) ||
+          translatedQuotes.length !== quoteList.length
+        ) {
+          translatedQuotes = quoteList;
+        }
+        translatedQuotes = translatedQuotes.map((t, i) => t ?? quoteList[i]);
       } catch (err) {
         console.error("번역 중 오류:", err);
         // 번역 실패 시 원문 사용
@@ -344,6 +352,7 @@ const TypingGame = () => {
   };
 
   const renderText = () => {
+    if (!currentSentence) return null;
     return currentSentence.split("").map((char, index) => {
       let color = "#666";
       if (index < userInput.length) {
