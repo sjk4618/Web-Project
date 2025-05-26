@@ -256,6 +256,7 @@ const MyPage = () => {
   };
 
   const formatElapsedTime = (seconds) => {
+    if (!seconds || isNaN(seconds) || seconds < 0) return "-";
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = Math.floor(seconds % 60);
     return `${minutes}분 ${remainingSeconds}초`;
@@ -278,10 +279,12 @@ const MyPage = () => {
           <StatLabel>한글 타자 평균 시간</StatLabel>
           <StatValue>
             {formatElapsedTime(
-              userStats.koStats.scores.reduce(
-                (acc, curr) => acc + curr.elapsedTime,
-                0
-              ) / userStats.koStats.scores.length || 0
+              userStats.koStats.scores.length > 0
+                ? userStats.koStats.scores.reduce(
+                    (acc, curr) => acc + (curr.elapsedTime || 0),
+                    0
+                  ) / userStats.koStats.scores.length
+                : 0
             )}
           </StatValue>
         </StatCard>
@@ -301,10 +304,12 @@ const MyPage = () => {
           <StatLabel>영어 타자 평균 시간</StatLabel>
           <StatValue>
             {formatElapsedTime(
-              userStats.enStats.scores.reduce(
-                (acc, curr) => acc + curr.elapsedTime,
-                0
-              ) / userStats.enStats.scores.length || 0
+              userStats.enStats.scores.length > 0
+                ? userStats.enStats.scores.reduce(
+                    (acc, curr) => acc + (curr.elapsedTime || 0),
+                    0
+                  ) / userStats.enStats.scores.length
+                : 0
             )}
           </StatValue>
         </StatCard>

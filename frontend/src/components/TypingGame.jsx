@@ -334,10 +334,19 @@ const TypingGame = () => {
       let initialSentences;
       if (language === "ko") {
         // 한글 타자: 영어 명언을 받아와서 번역
-        initialSentences = await fetchAndTranslate30Quotes();
+        initialSentences = await fetchAndTranslate30Quotes(difficulty);
       } else {
         // 영어 타자: 영어 명언만 받아옴
-        const res = await axios.get("/api/quotes");
+        let minLength = 0,
+          maxLength = 1000;
+        if (difficulty === "easy") {
+          maxLength = 50;
+        } else if (difficulty === "hard") {
+          minLength = 80;
+        }
+        const res = await axios.get(
+          `/api/quotes?minLength=${minLength}&maxLength=${maxLength}`
+        );
         initialSentences = res.data.results.map((item) => ({
           content: item.content,
           author: item.author,
@@ -392,9 +401,18 @@ const TypingGame = () => {
     }
   };
 
-  const fetchAndTranslate30Quotes = async () => {
+  const fetchAndTranslate30Quotes = async (difficulty) => {
     try {
-      const res = await axios.get("/api/quotes?limit=30");
+      let minLength = 0,
+        maxLength = 1000;
+      if (difficulty === "easy") {
+        maxLength = 50;
+      } else if (difficulty === "hard") {
+        minLength = 80;
+      }
+      const res = await axios.get(
+        `/api/quotes?limit=30&minLength=${minLength}&maxLength=${maxLength}`
+      );
       const quotes = res.data.results.map((item) => item.content);
       const translated = await Promise.all(
         quotes.map(async (quote) => {
@@ -493,7 +511,9 @@ const TypingGame = () => {
           );
         })}
         {author && (
-          <span style={{ color: "#666", marginLeft: "1rem" }}>- {author}</span>
+          <div style={{ color: "#666", marginTop: "0.5rem", fontSize: "1rem" }}>
+            - {author}
+          </div>
         )}
       </>
     );
@@ -546,12 +566,6 @@ const TypingGame = () => {
                     쉬움
                   </Button>
                   <Button
-                    active={difficulty === "medium"}
-                    onClick={() => setDifficulty("medium")}
-                  >
-                    보통
-                  </Button>
-                  <Button
                     active={difficulty === "hard"}
                     onClick={() => setDifficulty("hard")}
                   >
@@ -592,7 +606,7 @@ const TypingGame = () => {
                       marginTop: "0.5rem",
                     }}
                   >
-                    * 작가 이름은 입력하지 않아도 됩니다.
+                    * 사람 이름은 입력하지 않아도 됩니다.
                   </div>
                 </TextDisplay>
 

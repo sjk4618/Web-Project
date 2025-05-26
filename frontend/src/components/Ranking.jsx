@@ -157,6 +157,7 @@ const Ranking = () => {
   }, []);
 
   const formatElapsedTime = (seconds) => {
+    if (!seconds || isNaN(seconds) || seconds < 0) return "-";
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = Math.floor(seconds % 60);
     return `${minutes}분 ${remainingSeconds}초`;
@@ -206,9 +207,13 @@ const Ranking = () => {
           >
             <RankNumber>{index + 1}</RankNumber>
             <Username>{score.username}</Username>
-            <Score>{score.totalScore}점</Score>
-            <Accuracy>{score.accuracy}%</Accuracy>
-            <TypingSpeed>{score.typingSpeed}타/분</TypingSpeed>
+            <Score>
+              {isNaN(score.totalScore) ? "-" : `${score.totalScore}점`}
+            </Score>
+            <Accuracy>{score.accuracy ?? 0}%</Accuracy>
+            <TypingSpeed>
+              {score.typingSpeed ? `${score.typingSpeed}타/분` : "-"}
+            </TypingSpeed>
             <Time>{formatElapsedTime(score.elapsedTime)}</Time>
             <Difficulty>{score.difficulty}</Difficulty>
           </RankingItem>
