@@ -239,8 +239,8 @@ const TypingGame = () => {
     totalChars: 0,
     totalDecomposedInput: "",
     totalDecomposedTarget: "",
-    totalErrors: 0,
-    totalKeystrokes: 0,
+    totalCorrectJamo: 0,
+    totalJamo: 0,
   });
   const [_remainingSentences, setRemainingSentences] = useState([]);
   const inputRef = useRef(null);
@@ -254,7 +254,7 @@ const TypingGame = () => {
     return `${minutes}분 ${remainingSeconds}초`;
   };
 
-  // 한글 자모 분리 함수 수정
+  // 한글 자모 분리 함수
   const decomposeHangul = (char) => {
     const code = char.charCodeAt(0);
     if (code < 0xac00 || code > 0xd7a3) return [char]; // 한글이 아닌 경우
@@ -270,6 +270,13 @@ const TypingGame = () => {
     if (final > 0) result.push(String.fromCharCode(0x11a7 + final)); // 종성
 
     return result;
+  };
+
+  // 문자열의 전체 낱자 수 계산
+  const countTotalJamo = (text) => {
+    return text.split("").reduce((count, char) => {
+      return count + decomposeHangul(char).length;
+    }, 0);
   };
 
   // 한글 타수 계산 함수 수정
@@ -377,25 +384,24 @@ const TypingGame = () => {
           : currentSentence;
 
       if (language === "ko") {
-        // 한글 타자의 경우 새로운 정확도 계산 방식 사용
-        const isCorrect = newChar === content[value.length - 1];
+        // 한글 타자의 경우 낱자 단위로 정확도 계산
+        const targetJamo = decomposeHangul(content[value.length - 1]);
+        const inputJamo = decomposeHangul(newChar);
 
         setGameStats((prev) => {
-          const newTotalKeystrokes = prev.totalKeystrokes + 1;
-          const newTotalErrors = isCorrect
-            ? prev.totalErrors
-            : prev.totalErrors + 1;
+          const newTotalJamo = prev.totalJamo + targetJamo.length;
+          const newCorrectJamo =
+            prev.totalCorrectJamo +
+            inputJamo.filter((jamo, index) => jamo === targetJamo[index])
+              .length;
 
-          // 정확도 계산: 100 - (오타 수 / 총 키 입력 수 * 100)
-          const newAccuracy = Math.max(
-            0,
-            100 - (newTotalErrors / newTotalKeystrokes) * 100
-          );
+          // 정확도 계산: (정확하게 입력한 낱자 수 / 전체 입력해야 할 낱자 수) × 100
+          const newAccuracy = (newCorrectJamo / newTotalJamo) * 100;
 
           return {
             ...prev,
-            totalKeystrokes: newTotalKeystrokes,
-            totalErrors: newTotalErrors,
+            totalJamo: newTotalJamo,
+            totalCorrectJamo: newCorrectJamo,
             averageAccuracy: Math.round(newAccuracy * 100) / 100,
           };
         });
@@ -503,8 +509,8 @@ const TypingGame = () => {
         totalChars: 0,
         totalDecomposedInput: "",
         totalDecomposedTarget: "",
-        totalErrors: 0,
-        totalKeystrokes: 0,
+        totalCorrectJamo: 0,
+        totalJamo: 0,
       });
       if (inputRef.current) {
         inputRef.current.focus();
@@ -534,8 +540,8 @@ const TypingGame = () => {
         totalChars: 0,
         totalDecomposedInput: "",
         totalDecomposedTarget: "",
-        totalErrors: 0,
-        totalKeystrokes: 0,
+        totalCorrectJamo: 0,
+        totalJamo: 0,
       });
       if (inputRef.current) {
         inputRef.current.focus();
@@ -699,8 +705,8 @@ const TypingGame = () => {
       totalChars: 0,
       totalDecomposedInput: "",
       totalDecomposedTarget: "",
-      totalErrors: 0,
-      totalKeystrokes: 0,
+      totalCorrectJamo: 0,
+      totalJamo: 0,
     });
     setRemainingSentences([]);
   };
