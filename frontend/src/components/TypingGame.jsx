@@ -514,8 +514,10 @@ const TypingGame = () => {
           return;
         }
 
-        // 다음 문장으로 이동
-        const newSentences = [..._remainingSentences];
+        // 다음 문장으로 이동 (깊은 복사 수행)
+        const newSentences = JSON.parse(
+          JSON.stringify([..._remainingSentences])
+        );
         newSentences.shift();
         setRemainingSentences(newSentences);
 
@@ -551,7 +553,7 @@ const TypingGame = () => {
 
         // 마지막 문장이 아닌 경우에만 다음 문장 설정
         if (newSentences.length > 0) {
-          setCurrentSentence(newSentences[0]);
+          setCurrentSentence(JSON.parse(JSON.stringify(newSentences[0])));
           setUserInput("");
         } else {
           endGame();
@@ -590,8 +592,10 @@ const TypingGame = () => {
         }));
       }
 
-      // 문장을 10개로 제한
-      const limitedSentences = initialSentences.slice(0, 10);
+      // 문장을 10개로 제한하고 깊은 복사 수행
+      const limitedSentences = JSON.parse(
+        JSON.stringify(initialSentences.slice(0, 10))
+      );
       setRemainingSentences(limitedSentences);
       setCurrentSentence(limitedSentences[0]);
       setUserInput("");
