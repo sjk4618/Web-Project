@@ -505,33 +505,30 @@ const TypingGame = () => {
       if (e.key === "Enter" && isGameActive) {
         e.preventDefault();
 
-        // 현재 진행도 확인
-        const currentProgress = gameStats.completedSentences;
-        console.log("현재 진행도:", currentProgress);
-
-        // 게임 통계 업데이트
-        const words =
-          typeof currentSentence === "object"
-            ? currentSentence.content.split(" ").length
-            : currentSentence.split(" ").length;
-
-        const content =
-          typeof currentSentence === "object"
-            ? currentSentence.content
-            : currentSentence;
-        const currentAccuracy =
-          selectedLanguage === "ko"
-            ? calculateHangulAccuracy(userInput, content)
-            : calculateEnglishAccuracy(userInput, content);
-
         setGameStats((prev) => {
           const newCompletedSentences = prev.completedSentences + 1;
+          const content =
+            typeof currentSentence === "object"
+              ? currentSentence.content
+              : currentSentence;
+          const words = content.split(" ").length;
+          const currentAccuracy =
+            selectedLanguage === "ko"
+              ? calculateHangulAccuracy(userInput, content)
+              : calculateEnglishAccuracy(userInput, content);
           const newTotalAccuracy = prev.totalAccuracy + currentAccuracy;
           const newAverageAccuracy = newTotalAccuracy / newCompletedSentences;
 
           // 10문장 다 쓰면 게임 종료
           if (newCompletedSentences > 10) {
             endGame();
+          } else {
+            // 다음 문장으로 이동
+            const newSentences = [..._remainingSentences];
+            newSentences.shift();
+            setRemainingSentences(newSentences);
+            setCurrentSentence(newSentences[0]);
+            setUserInput("");
           }
 
           return {
@@ -544,17 +541,6 @@ const TypingGame = () => {
             averageAccuracy: Math.round(newAverageAccuracy * 100) / 100,
           };
         });
-
-        // 마지막 문장이 아닌 경우에만 다음 문장 설정
-        if (_remainingSentences.length > 1) {
-          const newSentences = [..._remainingSentences];
-          newSentences.shift();
-          setRemainingSentences(newSentences);
-          setCurrentSentence(newSentences[0]);
-          setUserInput("");
-        } else {
-          endGame();
-        }
       }
     } catch (err) {
       console.error("키 입력 처리 중 오류 발생:", err);
