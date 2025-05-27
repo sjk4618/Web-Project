@@ -202,7 +202,7 @@ const MyPage = () => {
 
   const [selectedLanguage, setSelectedLanguage] = useState("ko");
   const [selectedDifficulty, setSelectedDifficulty] = useState("easy");
-  const [error, setError] = useState(null);
+  const [_error, setError] = useState(null);
 
   useEffect(() => {
     try {
