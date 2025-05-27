@@ -464,6 +464,11 @@ const TypingGame = () => {
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && isGameActive) {
+      // 한글 입력 중인지 확인
+      if (e.nativeEvent.isComposing) {
+        console.log("[handleKeyDown] 한글 입력 중, 리턴");
+        return;
+      }
       // 한글 입력기 중복 방지
       if (enterPressedRef.current) {
         console.log("[handleKeyDown] Enter 중복 감지, 리턴");
@@ -471,6 +476,8 @@ const TypingGame = () => {
       }
       enterPressedRef.current = true;
       e.preventDefault();
+      e.stopPropagation(); // 이벤트 전파 중단
+
       const nextIndex = currentIndex + 1;
       const visibleProgress = Math.min(
         currentIndex + 1,
@@ -503,8 +510,10 @@ const TypingGame = () => {
 
   const handleKeyUp = (e) => {
     if (e.key === "Enter") {
-      enterPressedRef.current = false;
-      console.log("[handleKeyUp] Enter released, enterPressedRef false");
+      setTimeout(() => {
+        enterPressedRef.current = false;
+        console.log("[handleKeyUp] Enter released, enterPressedRef false");
+      }, 100); // 약간의 지연을 주어 이벤트 처리 완료 보장
     }
   };
 
