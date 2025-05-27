@@ -463,17 +463,50 @@ const TypingGame = () => {
   };
 
   const handleKeyDown = (e) => {
+    console.log(
+      "[handleKeyDown] key:",
+      e.key,
+      "isGameActive:",
+      isGameActive,
+      "enterPressedRef:",
+      enterPressedRef.current
+    );
     if (e.key === "Enter" && isGameActive) {
       // 한글 입력기 중복 방지
-      if (enterPressedRef.current) return;
+      if (enterPressedRef.current) {
+        console.log("[handleKeyDown] Enter 중복 감지, 리턴");
+        return;
+      }
       enterPressedRef.current = true;
       e.preventDefault();
       const nextIndex = currentIndex + 1;
+      const visibleProgress = currentIndex + 1;
+      console.log(
+        "[진행도] 화면 표시:",
+        visibleProgress,
+        "/",
+        remainingSentences.length
+      );
+      console.log(
+        "[진행도] currentIndex:",
+        currentIndex,
+        "nextIndex:",
+        nextIndex,
+        "remainingSentences.length:",
+        remainingSentences.length
+      );
       if (nextIndex >= remainingSentences.length) {
+        console.log("[handleKeyDown] endGame 호출 (마지막 문장 엔터)");
         endGame();
       } else {
+        console.log("[handleKeyDown] setCurrentIndex 호출, 값:", nextIndex);
         setCurrentIndex(nextIndex);
+        console.log(
+          "[handleKeyDown] setCurrentSentence 호출, 값:",
+          remainingSentences[nextIndex]
+        );
         setCurrentSentence(remainingSentences[nextIndex]);
+        console.log("[handleKeyDown] setUserInput 호출, 값: ''");
         setUserInput("");
       }
     }
@@ -482,6 +515,7 @@ const TypingGame = () => {
   const handleKeyUp = (e) => {
     if (e.key === "Enter") {
       enterPressedRef.current = false;
+      console.log("[handleKeyUp] Enter released, enterPressedRef false");
     }
   };
 
@@ -595,6 +629,7 @@ const TypingGame = () => {
   };
 
   const endGame = () => {
+    console.log("[endGame] 호출됨");
     setIsGameActive(false);
     const finalStats = {
       accuracy: Math.round(gameStats.averageAccuracy),
