@@ -338,9 +338,10 @@ const TypingGame = () => {
   const [selectedDifficulty, setSelectedDifficulty] = useState("");
   const [isGameActive, setIsGameActive] = useState(false);
   const [_isLoading, setIsLoading] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [remainingSentences, setRemainingSentences] = useState([]);
   const [currentSentence, setCurrentSentence] = useState("");
   const [userInput, setUserInput] = useState("");
-  const [_remainingSentences, setRemainingSentences] = useState([]);
   const [scores, setScores] = useState([]);
   const [bestScore, setBestScore] = useState(0);
   const [gameStats, setGameStats] = useState({
@@ -460,43 +461,19 @@ const TypingGame = () => {
     }
   };
 
-  const handleKeyDown = async (e) => {
-    try {
-      if (e.key === "Enter" && isGameActive) {
-        e.preventDefault();
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && isGameActive) {
+      e.preventDefault();
+      const nextIndex = currentIndex + 1;
+      console.log("현재 진행도:", nextIndex);
 
-        setGameStats((prev) => {
-          const nextProgress = prev.completedSentences + 1;
-          console.log(
-            "현재 진행도:",
-            prev.completedSentences,
-            "→",
-            nextProgress
-          );
-
-          if (prev.completedSentences < 10) {
-            // 다음 문장으로 이동
-            const newSentences = [..._remainingSentences];
-            newSentences.shift();
-            setRemainingSentences(newSentences);
-            setCurrentSentence(newSentences[0]);
-            setUserInput("");
-          }
-
-          // 10번째 문장까지 다 했으면 게임 종료
-          if (prev.completedSentences === 10) {
-            endGame();
-          }
-
-          return {
-            ...prev,
-            completedSentences: nextProgress,
-          };
-        });
+      if (nextIndex === 10) {
+        endGame();
+      } else {
+        setCurrentIndex(nextIndex);
+        setCurrentSentence(remainingSentences[nextIndex]);
+        setUserInput("");
       }
-    } catch (err) {
-      console.error("키 입력 처리 중 오류 발생:", err);
-      setError("게임 진행 중 오류가 발생했습니다. 다시 시도해주세요.");
     }
   };
 
@@ -532,6 +509,7 @@ const TypingGame = () => {
         JSON.stringify(initialSentences.slice(0, 10))
       );
       setRemainingSentences(limitedSentences);
+      setCurrentIndex(0);
       setCurrentSentence(limitedSentences[0]);
       setUserInput("");
       setIsGameActive(true);
@@ -815,7 +793,7 @@ const TypingGame = () => {
             </StatItem>
             <StatItem>
               <StatLabel>진행도</StatLabel>
-              <StatValue>{gameStats.completedSentences}/10</StatValue>
+              <StatValue>{currentIndex + 1}/10</StatValue>
             </StatItem>
           </StatsContainer>
         </>
