@@ -390,46 +390,6 @@ const TypingGame = () => {
     }, 0);
   };
 
-  const calculateHangulAccuracy = (input, target) => {
-    if (!input || !target) return 0;
-
-    // NFD 정규화를 사용하여 자모 분해
-    const decomposedInput = input.normalize("NFD");
-    const decomposedTarget = target.normalize("NFD");
-
-    let correctCount = 0;
-    const minLength = Math.min(decomposedInput.length, decomposedTarget.length);
-
-    // 자모 단위로 비교
-    for (let i = 0; i < minLength; i++) {
-      if (decomposedInput[i] === decomposedTarget[i]) {
-        correctCount++;
-      }
-    }
-
-    // 정확도 계산 (소수점 둘째 자리까지)
-    const accuracy = (correctCount / decomposedTarget.length) * 100;
-    return Math.round(accuracy * 100) / 100;
-  };
-
-  const calculateEnglishAccuracy = (input, target) => {
-    if (!input || !target) return 0;
-
-    let correctCount = 0;
-    const minLength = Math.min(input.length, target.length);
-
-    // 문자 단위로 비교
-    for (let i = 0; i < minLength; i++) {
-      if (input[i] === target[i]) {
-        correctCount++;
-      }
-    }
-
-    // 정확도 계산 (소수점 둘째 자리까지)
-    const accuracy = (correctCount / target.length) * 100;
-    return Math.round(accuracy * 100) / 100;
-  };
-
   useEffect(() => {
     resetGame();
   }, []);
@@ -506,23 +466,15 @@ const TypingGame = () => {
         e.preventDefault();
 
         setGameStats((prev) => {
-          const newCompletedSentences = prev.completedSentences + 1;
-          const content =
-            typeof currentSentence === "object"
-              ? currentSentence.content
-              : currentSentence;
-          const words = content.split(" ").length;
-          const currentAccuracy =
-            selectedLanguage === "ko"
-              ? calculateHangulAccuracy(userInput, content)
-              : calculateEnglishAccuracy(userInput, content);
-          const newTotalAccuracy = prev.totalAccuracy + currentAccuracy;
-          const newAverageAccuracy = newTotalAccuracy / newCompletedSentences;
+          const nextProgress = prev.completedSentences + 1;
+          console.log(
+            "현재 진행도:",
+            prev.completedSentences,
+            "→",
+            nextProgress
+          );
 
-          // 10문장 다 쓰면 게임 종료
-          if (newCompletedSentences > 10) {
-            endGame();
-          } else {
+          if (prev.completedSentences < 10) {
             // 다음 문장으로 이동
             const newSentences = [..._remainingSentences];
             newSentences.shift();
@@ -531,14 +483,14 @@ const TypingGame = () => {
             setUserInput("");
           }
 
+          // 10번째 문장까지 다 했으면 게임 종료
+          if (prev.completedSentences === 10) {
+            endGame();
+          }
+
           return {
             ...prev,
-            correctWords:
-              prev.correctWords + (currentAccuracy === 100 ? words : 0),
-            completedSentences: newCompletedSentences,
-            totalInputs: prev.totalInputs + 1,
-            totalAccuracy: newTotalAccuracy,
-            averageAccuracy: Math.round(newAverageAccuracy * 100) / 100,
+            completedSentences: nextProgress,
           };
         });
       }
