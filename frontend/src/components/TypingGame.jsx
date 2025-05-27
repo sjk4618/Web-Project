@@ -514,29 +514,27 @@ const TypingGame = () => {
           return;
         }
 
-        // 다음 문장으로 이동 (깊은 복사 수행)
-        const newSentences = JSON.parse(
-          JSON.stringify([..._remainingSentences])
-        );
+        // 다음 문장으로 이동
+        const newSentences = [..._remainingSentences];
         newSentences.shift();
         setRemainingSentences(newSentences);
 
         // 게임 통계 업데이트
+        const words =
+          typeof currentSentence === "object"
+            ? currentSentence.content.split(" ").length
+            : currentSentence.split(" ").length;
+
+        const content =
+          typeof currentSentence === "object"
+            ? currentSentence.content
+            : currentSentence;
+        const currentAccuracy =
+          selectedLanguage === "ko"
+            ? calculateHangulAccuracy(userInput, content)
+            : calculateEnglishAccuracy(userInput, content);
+
         setGameStats((prev) => {
-          const words =
-            typeof currentSentence === "object"
-              ? currentSentence.content.split(" ").length
-              : currentSentence.split(" ").length;
-
-          const content =
-            typeof currentSentence === "object"
-              ? currentSentence.content
-              : currentSentence;
-          const currentAccuracy =
-            selectedLanguage === "ko"
-              ? calculateHangulAccuracy(userInput, content)
-              : calculateEnglishAccuracy(userInput, content);
-
           const newTotalAccuracy = prev.totalAccuracy + currentAccuracy;
           const newAverageAccuracy = newTotalAccuracy / (currentProgress + 1);
 
@@ -553,7 +551,7 @@ const TypingGame = () => {
 
         // 마지막 문장이 아닌 경우에만 다음 문장 설정
         if (newSentences.length > 0) {
-          setCurrentSentence(JSON.parse(JSON.stringify(newSentences[0])));
+          setCurrentSentence(newSentences[0]);
           setUserInput("");
         } else {
           endGame();
