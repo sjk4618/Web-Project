@@ -359,6 +359,7 @@ const TypingGame = () => {
   const keystrokeTimesRef = useRef([]);
   const lastKeystrokeTimeRef = useRef(null);
   const [error, setError] = useState(null);
+  const enterPressedRef = useRef(false);
 
   const formatElapsedTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
@@ -463,6 +464,9 @@ const TypingGame = () => {
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && isGameActive) {
+      // 한글 입력기 중복 방지
+      if (enterPressedRef.current) return;
+      enterPressedRef.current = true;
       e.preventDefault();
       const nextIndex = currentIndex + 1;
       if (nextIndex >= remainingSentences.length) {
@@ -472,6 +476,12 @@ const TypingGame = () => {
         setCurrentSentence(remainingSentences[nextIndex]);
         setUserInput("");
       }
+    }
+  };
+
+  const handleKeyUp = (e) => {
+    if (e.key === "Enter") {
+      enterPressedRef.current = false;
     }
   };
 
@@ -776,6 +786,7 @@ const TypingGame = () => {
               value={userInput}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
+              onKeyUp={handleKeyUp}
               placeholder="여기에 입력하세요..."
               disabled={!isGameActive}
             />
