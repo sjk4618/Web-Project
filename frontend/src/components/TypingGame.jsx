@@ -464,15 +464,24 @@ const TypingGame = () => {
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && isGameActive) {
       e.preventDefault();
-      const nextIndex = currentIndex + 1;
-      console.log("현재 진행도:", nextIndex);
 
-      if (nextIndex === 10) {
-        endGame();
-      } else {
-        setCurrentIndex(nextIndex);
-        setCurrentSentence(remainingSentences[nextIndex]);
-        setUserInput("");
+      const content =
+        typeof currentSentence === "object"
+          ? currentSentence.content
+          : currentSentence;
+
+      // 현재 문장을 정확히 입력한 경우에만 다음 문장으로 진행
+      if (userInput.trim() === content.trim()) {
+        const nextIndex = currentIndex + 1;
+
+        // 진행도는 10문장 기준으로 제한
+        if (nextIndex >= remainingSentences.length) {
+          endGame();
+        } else {
+          setCurrentIndex(nextIndex);
+          setCurrentSentence(remainingSentences[nextIndex]);
+          setUserInput("");
+        }
       }
     }
   };
