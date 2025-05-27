@@ -3,79 +3,88 @@ import axios from "axios";
 
 export default async function handler(req, res) {
   try {
-    // HTTP 메소드 검증
+    // 1. 메소드 검증
     if (req.method !== "POST") {
-      res.status(405).json({ error: "Method not allowed" });
-      return;
+      return res.status(405).json({ error: "Method Not Allowed. Use POST." });
     }
 
-    // 요청 본문 검증
+    // 2. 요청 본문 파싱
     const { text, source = "EN", target = "KO" } = req.body || req.query;
 
-    if (!text) {
-      res.status(400).json({ error: "Missing required text parameter" });
-      return;
+    // 3. 필수 파라미터 및 타입 유효성 검증
+    if (typeof text !== "string" || text.trim() === "") {
+      return res.status(400).json({
+        error:
+          "Invalid or missing 'text' parameter. Must be a non-empty string.",
+      });
     }
 
-    // API 키 검증
+    if (typeof source !== "string" || typeof target !== "string") {
+      return res.status(400).json({
+        error: "Invalid 'source' or 'target' language code. Must be strings.",
+      });
+    }
+
+    // 4. API 키 검증
     const apiKey = process.env.DEEPL_API_KEY;
     if (!apiKey) {
-      res
-        .status(500)
-        .json({ error: "Translation service configuration error" });
-      return;
+      return res.status(500).json({
+        error: "Translation service configuration error",
+        details: "Missing DEEPL_API_KEY in environment",
+      });
     }
 
+    // 5. DeepL API 요청
     const response = await axios.post(
       "https://api-free.deepl.com/v2/translate",
       new URLSearchParams({
         auth_key: apiKey,
-        text,
-        source_lang: source,
-        target_lang: target,
+        text: text.trim(),
+        source_lang: source.toUpperCase(),
+        target_lang: target.toUpperCase(),
       }),
       {
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
         },
-        timeout: 10000, // 10초 타임아웃 설정
+        timeout: 10000,
       }
     );
 
-    // 응답 데이터 검증
-    if (
-      !response.data ||
-      !response.data.translations ||
-      !response.data.translations[0]
-    ) {
-      throw new Error("Invalid response format from DeepL API");
+    // 6. 응답 검증
+    const translations = response?.data?.translations;
+    if (!Array.isArray(translations) || !translations[0]?.text) {
+      console.error("Unexpected DeepL API response:", response?.data);
+      return res.status(502).json({
+        error: "Invalid response format from translation service",
+        details: "Missing 'translations[0].text' in response",
+      });
     }
 
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res
-      .status(200)
-      .json({ translatedText: response.data.translations[0].text });
+    return res.status(200).json({ translatedText: translations[0].text });
   } catch (err) {
     console.error("Translation API Error:", err);
 
-    // 에러 타입에 따른 적절한 상태 코드 반환
+    // 7. 에러 유형별 처리
     if (err.response) {
-      // DeepL API에서 반환한 에러
-      res.status(err.response.status).json({
+      return res.status(err.response.status).json({
         error: "Translation service error",
         details: err.response.data,
       });
-    } else if (err.request) {
-      // 요청은 보냈지만 응답을 받지 못한 경우
-      res.status(504).json({
+    } else if (err.code === "ECONNABORTED") {
+      return res.status(504).json({
         error: "Translation service timeout",
-        details: "The request to the translation service timed out",
+        details: "Request to DeepL timed out",
+      });
+    } else if (err.request) {
+      return res.status(502).json({
+        error: "No response from translation service",
+        details: "Request sent but no response received",
       });
     } else {
-      // 기타 에러
-      res.status(500).json({
+      return res.status(500).json({
         error: "Translation failed",
-        details: err.message,
+        details: err.message || "Unknown error",
       });
     }
   }
