@@ -463,14 +463,6 @@ const TypingGame = () => {
   };
 
   const handleKeyDown = (e) => {
-    console.log(
-      "[handleKeyDown] key:",
-      e.key,
-      "isGameActive:",
-      isGameActive,
-      "enterPressedRef:",
-      enterPressedRef.current
-    );
     if (e.key === "Enter" && isGameActive) {
       // 한글 입력기 중복 방지
       if (enterPressedRef.current) {
@@ -480,7 +472,10 @@ const TypingGame = () => {
       enterPressedRef.current = true;
       e.preventDefault();
       const nextIndex = currentIndex + 1;
-      const visibleProgress = currentIndex + 1;
+      const visibleProgress = Math.min(
+        currentIndex + 1,
+        remainingSentences.length
+      );
       console.log(
         "[진행도] 화면 표시:",
         visibleProgress,
@@ -499,14 +494,8 @@ const TypingGame = () => {
         console.log("[handleKeyDown] endGame 호출 (마지막 문장 엔터)");
         endGame();
       } else {
-        console.log("[handleKeyDown] setCurrentIndex 호출, 값:", nextIndex);
         setCurrentIndex(nextIndex);
-        console.log(
-          "[handleKeyDown] setCurrentSentence 호출, 값:",
-          remainingSentences[nextIndex]
-        );
         setCurrentSentence(remainingSentences[nextIndex]);
-        console.log("[handleKeyDown] setUserInput 호출, 값: ''");
         setUserInput("");
       }
     }
@@ -837,7 +826,9 @@ const TypingGame = () => {
             </StatItem>
             <StatItem>
               <StatLabel>진행도</StatLabel>
-              <StatValue>{currentIndex + 1}/10</StatValue>
+              <StatValue>
+                {Math.min(currentIndex + 1, remainingSentences.length)}/10
+              </StatValue>
             </StatItem>
           </StatsContainer>
         </>
