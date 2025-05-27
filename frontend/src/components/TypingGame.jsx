@@ -507,6 +507,7 @@ const TypingGame = () => {
 
         // 현재 진행도 확인
         const currentProgress = gameStats.completedSentences;
+        console.log("현재 진행도:", currentProgress);
 
         // 진행도가 10을 초과하면 게임 종료
         if (currentProgress >= 10) {
@@ -537,12 +538,15 @@ const TypingGame = () => {
         setGameStats((prev) => {
           const newTotalAccuracy = prev.totalAccuracy + currentAccuracy;
           const newAverageAccuracy = newTotalAccuracy / (currentProgress + 1);
+          const newCompletedSentences = currentProgress + 1;
+
+          console.log("새로운 진행도:", newCompletedSentences);
 
           return {
             ...prev,
             correctWords:
               prev.correctWords + (currentAccuracy === 100 ? words : 0),
-            completedSentences: currentProgress + 1,
+            completedSentences: newCompletedSentences,
             totalInputs: prev.totalInputs + 1,
             totalAccuracy: newTotalAccuracy,
             averageAccuracy: Math.round(newAverageAccuracy * 100) / 100,
