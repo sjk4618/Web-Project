@@ -509,17 +509,6 @@ const TypingGame = () => {
         const currentProgress = gameStats.completedSentences;
         console.log("현재 진행도:", currentProgress);
 
-        // 진행도가 10을 초과하면 게임 종료
-        if (currentProgress > 10) {
-          endGame();
-          return;
-        }
-
-        // 다음 문장으로 이동
-        const newSentences = [..._remainingSentences];
-        newSentences.shift();
-        setRemainingSentences(newSentences);
-
         // 게임 통계 업데이트
         const words =
           typeof currentSentence === "object"
@@ -536,11 +525,14 @@ const TypingGame = () => {
             : calculateEnglishAccuracy(userInput, content);
 
         setGameStats((prev) => {
+          const newCompletedSentences = prev.completedSentences + 1;
           const newTotalAccuracy = prev.totalAccuracy + currentAccuracy;
-          const newAverageAccuracy = newTotalAccuracy / (currentProgress + 1);
-          const newCompletedSentences = currentProgress + 1;
+          const newAverageAccuracy = newTotalAccuracy / newCompletedSentences;
 
-          console.log("새로운 진행도:", newCompletedSentences);
+          // 10문장 다 쓰면 게임 종료
+          if (newCompletedSentences > 10) {
+            endGame();
+          }
 
           return {
             ...prev,
@@ -554,7 +546,10 @@ const TypingGame = () => {
         });
 
         // 마지막 문장이 아닌 경우에만 다음 문장 설정
-        if (newSentences.length > 0) {
+        if (_remainingSentences.length > 1) {
+          const newSentences = [..._remainingSentences];
+          newSentences.shift();
+          setRemainingSentences(newSentences);
           setCurrentSentence(newSentences[0]);
           setUserInput("");
         } else {
