@@ -2,18 +2,23 @@ import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 
 const Container = styled.div`
-  max-width: 800px;
+  max-width: 1000px;
   margin: 2rem auto;
   padding: 2rem;
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
 `;
 
 const Title = styled.h2`
   text-align: center;
   margin-bottom: 2rem;
-  color: #333;
+  font-size: 2.5rem;
+  font-weight: 700;
+  background: linear-gradient(45deg, #2c3e50, #3498db);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 `;
 
 const LanguageSelector = styled.div`
@@ -24,42 +29,49 @@ const LanguageSelector = styled.div`
 `;
 
 const LanguageButton = styled.button`
-  padding: 0.5rem 1rem;
+  padding: 0.8rem 1.5rem;
   border: none;
-  border-radius: 5px;
-  background-color: ${(props) => (props.active ? "#4CAF50" : "#ddd")};
-  color: ${(props) => (props.active ? "white" : "#333")};
+  border-radius: 10px;
+  background: ${(props) =>
+    props.active
+      ? "linear-gradient(45deg, #3498db, #2980b9)"
+      : "rgba(255, 255, 255, 0.9)"};
+  color: ${(props) => (props.active ? "white" : "#2c3e50")};
   cursor: pointer;
   font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
   &:hover {
-    background-color: ${(props) => (props.active ? "#45a049" : "#ccc")};
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
 `;
 
-const DifficultySelector = styled.div`
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-  margin-bottom: 2rem;
-`;
+const DifficultySelector = styled(LanguageSelector)``;
 
 const DifficultyButton = styled(LanguageButton)``;
 
 const ScoreExplanation = styled.div`
-  background: #f8f9fa;
-  padding: 1.5rem;
-  border-radius: 5px;
+  background: rgba(248, 249, 250, 0.9);
+  padding: 2rem;
+  border-radius: 15px;
   margin-bottom: 2rem;
   font-size: 1rem;
-  color: #333;
+  color: #2c3e50;
   line-height: 1.6;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 
   h3 {
-    color: #4caf50;
+    color: #3498db;
     margin-bottom: 1rem;
-    font-size: 1.2rem;
+    font-size: 1.4rem;
+    font-weight: 600;
+  }
+
+  p {
+    margin: 0.8rem 0;
   }
 
   ul {
@@ -69,85 +81,115 @@ const ScoreExplanation = styled.div`
   }
 
   li {
-    margin: 0.5rem 0;
-    padding-left: 1.5rem;
+    margin: 0.8rem 0;
+    padding-left: 1.8rem;
     position: relative;
 
     &:before {
       content: "•";
-      color: #4caf50;
+      color: #3498db;
       position: absolute;
       left: 0;
+      font-size: 1.2rem;
     }
   }
 `;
 
 const RankingList = styled.div`
   margin-top: 2rem;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 `;
 
 const RankingItem = styled.div`
-  padding: 1rem;
-  border-bottom: 1px solid #eee;
+  padding: 1.2rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   display: grid;
   grid-template-columns: 0.5fr 2fr 1fr 1fr 1fr 1fr 1fr;
   gap: 1rem;
   align-items: center;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: rgba(52, 152, 219, 0.05);
+  }
 
   &:last-child {
     border-bottom: none;
   }
 
   &.top-1 {
-    background: linear-gradient(to right, #ffd700, #fff8e1);
+    background: linear-gradient(
+      to right,
+      rgba(255, 215, 0, 0.1),
+      rgba(255, 248, 225, 0.1)
+    );
   }
 
   &.top-2 {
-    background: linear-gradient(to right, #c0c0c0, #f5f5f5);
+    background: linear-gradient(
+      to right,
+      rgba(192, 192, 192, 0.1),
+      rgba(245, 245, 245, 0.1)
+    );
   }
 
   &.top-3 {
-    background: linear-gradient(to right, #cd7f32, #ffe4c4);
+    background: linear-gradient(
+      to right,
+      rgba(205, 127, 50, 0.1),
+      rgba(255, 228, 196, 0.1)
+    );
   }
 `;
 
 const RankingHeader = styled(RankingItem)`
-  font-weight: bold;
-  background: #f8f9fa;
-  border-radius: 5px;
-  margin-bottom: 1rem;
+  font-weight: 600;
+  background: rgba(52, 152, 219, 0.1);
+  color: #2c3e50;
+  border-radius: 15px 15px 0 0;
+  margin-bottom: 0;
 `;
 
 const RankNumber = styled.div`
-  font-weight: bold;
-  color: #666;
+  font-weight: 600;
+  color: #2c3e50;
   text-align: center;
+  font-size: 1.1rem;
 `;
 
 const Username = styled.div`
-  font-weight: bold;
-  color: #333;
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 1.1rem;
 `;
 
 const Score = styled.div`
-  color: #2196f3;
-  font-weight: bold;
+  color: #3498db;
+  font-weight: 600;
+  font-size: 1.1rem;
 `;
 
 const Accuracy = styled.div`
-  color: #4caf50;
+  color: #2ecc71;
+  font-weight: 500;
 `;
 
 const TypingSpeed = styled.div`
-  color: #ff9800;
+  color: #e67e22;
+  font-weight: 500;
 `;
 
 const Time = styled.div`
-  color: #9c27b0;
+  color: #9b59b6;
+  font-weight: 500;
 `;
 
 const Difficulty = styled.div`
-  color: #666;
+  color: #7f8c8d;
+  font-weight: 500;
 `;
 
 const Ranking = () => {

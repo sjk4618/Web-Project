@@ -23,70 +23,94 @@ ChartJS.register(
 );
 
 const Container = styled.div`
-  max-width: 800px;
+  max-width: 1000px;
   margin: 2rem auto;
   padding: 2rem;
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
 `;
 
 const MyPageTitle = styled.h2`
   text-align: center;
   margin-bottom: 2rem;
-  color: #333;
+  font-size: 2.5rem;
+  font-weight: 700;
+  background: linear-gradient(45deg, #2c3e50, #3498db);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 `;
 
 const StatsGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
   margin-bottom: 2rem;
 `;
 
 const StatCard = styled.div`
-  padding: 1.5rem;
-  background: #f8f9fa;
-  border-radius: 10px;
+  padding: 2rem;
+  background: rgba(248, 249, 250, 0.9);
+  border-radius: 15px;
   text-align: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  }
 `;
 
 const StatLabel = styled.div`
-  font-size: 0.9rem;
-  color: #666;
-  margin-bottom: 0.5rem;
+  font-size: 1rem;
+  color: #7f8c8d;
+  margin-bottom: 0.8rem;
+  font-weight: 500;
 `;
 
 const StatValue = styled.div`
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #333;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2c3e50;
+  background: linear-gradient(45deg, #2c3e50, #3498db);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 `;
 
 const ScoreList = styled.div`
   margin-top: 2rem;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 `;
 
 const ScoreHeader = styled.div`
-  padding: 1rem;
-  border-bottom: 2px solid #eee;
+  padding: 1.2rem;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.05);
   display: grid;
   grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
   gap: 1rem;
   align-items: center;
-  font-weight: bold;
-  background: #f8f9fa;
-  border-radius: 5px;
-  margin-bottom: 1rem;
+  font-weight: 600;
+  background: rgba(52, 152, 219, 0.1);
+  color: #2c3e50;
 `;
 
 const ScoreItem = styled.div`
-  padding: 1rem;
-  border-bottom: 1px solid #eee;
+  padding: 1.2rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   display: grid;
   grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
   gap: 1rem;
   align-items: center;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: rgba(52, 152, 219, 0.05);
+  }
 
   &:last-child {
     border-bottom: none;
@@ -101,16 +125,23 @@ const LanguageSelector = styled.div`
 `;
 
 const LanguageButton = styled.button`
-  padding: 0.5rem 1rem;
+  padding: 0.8rem 1.5rem;
   border: none;
-  border-radius: 5px;
-  background-color: ${(props) => (props.active ? "#4CAF50" : "#ddd")};
-  color: ${(props) => (props.active ? "white" : "#333")};
+  border-radius: 10px;
+  background: ${(props) =>
+    props.active
+      ? "linear-gradient(45deg, #3498db, #2980b9)"
+      : "rgba(255, 255, 255, 0.9)"};
+  color: ${(props) => (props.active ? "white" : "#2c3e50")};
   cursor: pointer;
   font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
   &:hover {
-    background-color: ${(props) => (props.active ? "#45a049" : "#ccc")};
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
 `;
 
@@ -120,7 +151,21 @@ const DifficultySelector = styled(LanguageSelector)`
 
 const ChartContainer = styled.div`
   margin-top: 2rem;
-  height: 300px;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  height: 400px;
+`;
+
+const ErrorMessage = styled.div`
+  padding: 1rem;
+  margin: 1rem 0;
+  background: rgba(231, 76, 60, 0.1);
+  color: #e74c3c;
+  border-radius: 10px;
+  text-align: center;
+  font-weight: 500;
 `;
 
 const MyPage = () => {

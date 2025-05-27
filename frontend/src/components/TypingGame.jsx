@@ -4,18 +4,23 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 const Container = styled.div`
-  max-width: 800px;
+  max-width: 1000px;
   margin: 2rem auto;
   padding: 2rem;
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
 `;
 
 const Title = styled.h1`
-  font-size: 2rem;
+  font-size: 2.5rem;
   margin-bottom: 2rem;
   text-align: center;
+  font-weight: 700;
+  background: linear-gradient(45deg, #2c3e50, #3498db);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 `;
 
 const LanguageSelector = styled.div`
@@ -24,16 +29,23 @@ const LanguageSelector = styled.div`
 `;
 
 const LanguageButton = styled.button`
-  padding: 0.5rem 1rem;
+  padding: 0.8rem 1.5rem;
   border: none;
-  border-radius: 5px;
-  background-color: ${(props) => (props.active ? "#4CAF50" : "#ddd")};
-  color: ${(props) => (props.active ? "white" : "#333")};
+  border-radius: 10px;
+  background: ${(props) =>
+    props.active
+      ? "linear-gradient(45deg, #3498db, #2980b9)"
+      : "rgba(255, 255, 255, 0.9)"};
+  color: ${(props) => (props.active ? "white" : "#2c3e50")};
   cursor: pointer;
   margin: 0 0.5rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
   &:hover {
-    background-color: ${(props) => (props.active ? "#45a049" : "#ccc")};
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
 `;
 
@@ -47,23 +59,32 @@ const DifficultyButton = styled(LanguageButton)``;
 const StartMessage = styled.div`
   text-align: center;
   margin-bottom: 2rem;
-  color: #666;
+  color: #7f8c8d;
+  font-size: 1.1rem;
+  font-weight: 500;
 `;
 
 const StartButton = styled(LanguageButton)`
   display: block;
-  margin: 1rem auto;
-  padding: 0.8rem 2rem;
-  font-size: 1.1rem;
-  background-color: ${(props) =>
-    props.disabled ? "#ccc" : props.active ? "#4CAF50" : "#ddd"};
+  margin: 1.5rem auto;
+  padding: 1rem 2.5rem;
+  font-size: 1.2rem;
+  background: ${(props) =>
+    props.disabled
+      ? "rgba(189, 195, 199, 0.9)"
+      : props.active
+      ? "linear-gradient(45deg, #3498db, #2980b9)"
+      : "rgba(255, 255, 255, 0.9)"};
   cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
   opacity: ${(props) => (props.disabled ? 0.7 : 1)};
   transition: all 0.3s ease;
 
   &:hover {
-    background-color: ${(props) =>
-      props.disabled ? "#ccc" : props.active ? "#45a049" : "#ccc"};
+    transform: ${(props) => (props.disabled ? "none" : "translateY(-2px)")};
+    box-shadow: ${(props) =>
+      props.disabled
+        ? "0 2px 4px rgba(0, 0, 0, 0.1)"
+        : "0 4px 12px rgba(0, 0, 0, 0.15)"};
   }
 `;
 
@@ -72,26 +93,31 @@ const GameContainer = styled.div`
 `;
 
 const TextDisplay = styled.div`
-  font-size: 1.2rem;
-  line-height: 1.6;
-  margin-bottom: 1rem;
-  padding: 1rem;
-  background: #f8f9fa;
-  border-radius: 5px;
-  min-height: 100px;
+  font-size: 1.3rem;
+  line-height: 1.8;
+  margin-bottom: 1.5rem;
+  padding: 1.5rem;
+  background: rgba(248, 249, 250, 0.9);
+  border-radius: 15px;
+  min-height: 120px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  color: #2c3e50;
 `;
 
 const Input = styled.input`
   width: 100%;
-  padding: 0.8rem;
-  font-size: 1.1rem;
-  border: 2px solid #ddd;
-  border-radius: 5px;
-  margin-bottom: 1rem;
+  padding: 1rem;
+  font-size: 1.2rem;
+  border: 2px solid rgba(52, 152, 219, 0.2);
+  border-radius: 10px;
+  margin-bottom: 1.5rem;
+  background: rgba(255, 255, 255, 0.9);
+  transition: all 0.3s ease;
 
   &:focus {
     outline: none;
-    border-color: #4caf50;
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
   }
 `;
 
@@ -99,22 +125,31 @@ const StatsContainer = styled.div`
   display: flex;
   justify-content: space-around;
   margin-bottom: 2rem;
+  background: rgba(248, 249, 250, 0.9);
+  padding: 1.5rem;
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 `;
 
 const StatItem = styled.div`
   text-align: center;
+  padding: 0 1rem;
 `;
 
 const StatLabel = styled.div`
-  font-size: 0.9rem;
-  color: #666;
-  margin-bottom: 0.3rem;
+  font-size: 1rem;
+  color: #7f8c8d;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
 `;
 
 const StatValue = styled.div`
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #333;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #2c3e50;
+  background: linear-gradient(45deg, #2c3e50, #3498db);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 `;
 
 const ResultModal = styled.div`
@@ -124,6 +159,7 @@ const ResultModal = styled.div`
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(5px);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -131,46 +167,60 @@ const ResultModal = styled.div`
 `;
 
 const ResultContent = styled.div`
-  background: white;
-  padding: 2rem;
-  border-radius: 10px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-  min-width: 300px;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 2.5rem;
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  min-width: 400px;
   text-align: center;
+  backdrop-filter: blur(10px);
 `;
 
 const ResultTitle = styled.h2`
-  color: #333;
-  margin-bottom: 1.5rem;
+  color: #2c3e50;
+  margin-bottom: 2rem;
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(45deg, #2c3e50, #3498db);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 `;
 
 const ResultStats = styled.div`
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
+  background: rgba(248, 249, 250, 0.9);
+  padding: 1.5rem;
+  border-radius: 15px;
 `;
 
 const ResultStatItem = styled.div`
-  margin: 0.5rem 0;
-  color: #666;
+  margin: 1rem 0;
+  color: #2c3e50;
 `;
 
 const ResultStatLabel = styled.div`
-  font-size: 0.9rem;
-  margin-bottom: 0.3rem;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  color: #7f8c8d;
+  font-weight: 500;
 `;
 
 const ResultStatValue = styled.div`
-  font-size: 1.2rem;
-  font-weight: bold;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2c3e50;
 `;
 
 const ResultButtons = styled.div`
   display: flex;
   justify-content: center;
-  gap: 1rem;
+  gap: 1.5rem;
 `;
 
 const ResultButton = styled(LanguageButton)`
-  min-width: 120px;
+  min-width: 150px;
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
 `;
 
 const LoadingOverlay = styled.div`
@@ -180,6 +230,7 @@ const LoadingOverlay = styled.div`
   right: 0;
   bottom: 0;
   background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(5px);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -188,13 +239,13 @@ const LoadingOverlay = styled.div`
 `;
 
 const LoadingSpinner = styled.div`
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #4caf50;
+  border: 4px solid rgba(52, 152, 219, 0.2);
+  border-top: 4px solid #3498db;
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  width: 50px;
+  height: 50px;
   animation: spin 1s linear infinite;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 
   @keyframes spin {
     0% {
@@ -207,24 +258,29 @@ const LoadingSpinner = styled.div`
 `;
 
 const LoadingText = styled.div`
-  font-size: 1.2rem;
-  color: #333;
+  font-size: 1.3rem;
+  color: #2c3e50;
   text-align: center;
+  font-weight: 500;
 `;
 
 const NoticeText = styled.div`
   text-align: center;
-  color: #666;
-  font-size: 0.9rem;
-  margin-top: 1rem;
+  color: #7f8c8d;
+  font-size: 1rem;
+  margin-top: 1.5rem;
+  font-weight: 500;
 `;
 
 const Timer = styled.div`
   text-align: center;
-  font-size: 1.2rem;
-  color: #333;
-  margin-bottom: 1rem;
-  font-weight: bold;
+  font-size: 1.4rem;
+  color: #2c3e50;
+  margin-bottom: 1.5rem;
+  font-weight: 700;
+  background: linear-gradient(45deg, #2c3e50, #3498db);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 `;
 
 const ErrorPopup = styled.div`
@@ -234,6 +290,7 @@ const ErrorPopup = styled.div`
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(5px);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -241,13 +298,14 @@ const ErrorPopup = styled.div`
 `;
 
 const ErrorContent = styled.div`
-  background: white;
+  background: rgba(255, 255, 255, 0.95);
   padding: 2rem;
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
   text-align: center;
   max-width: 400px;
   width: 90%;
+  backdrop-filter: blur(10px);
 `;
 
 const ErrorTitle = styled.h3`

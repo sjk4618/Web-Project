@@ -1,5 +1,100 @@
 import React, { useState } from "react";
 import { useUserStore } from "../store/useUserStore";
+import styled from "styled-components";
+
+const AuthContainer = styled.div`
+  max-width: 400px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+`;
+
+const Title = styled.h2`
+  font-size: 2rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #2c3e50;
+  background: linear-gradient(45deg, #2c3e50, #3498db);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+`;
+
+const Form = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+`;
+
+const Input = styled.input`
+  padding: 1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.9);
+
+  &:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+  }
+
+  &::placeholder {
+    color: #95a5a6;
+  }
+`;
+
+const SubmitButton = styled.button`
+  padding: 1rem;
+  background: linear-gradient(45deg, #3498db, #2980b9);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 1rem;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+`;
+
+const ToggleButton = styled.button`
+  margin-top: 1.5rem;
+  background: none;
+  border: none;
+  color: #3498db;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0.5rem;
+  border-radius: 5px;
+
+  &:hover {
+    background: rgba(52, 152, 219, 0.1);
+  }
+`;
+
+const ErrorMessage = styled.p`
+  color: #e74c3c;
+  font-size: 0.9rem;
+  margin: 0;
+  padding: 0.5rem;
+  background: rgba(231, 76, 60, 0.1);
+  border-radius: 5px;
+  text-align: center;
+`;
 
 const Auth = () => {
   const setUser = useUserStore((state) => state.setUser);
@@ -82,51 +177,42 @@ const Auth = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto my-8 p-8 bg-white rounded-xl shadow-lg">
-      <h2 className="text-2xl font-bold mb-6 text-center">
-        {isLogin ? "로그인" : "회원가입"}
-      </h2>
-      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-        <input
+    <AuthContainer>
+      <Title>{isLogin ? "로그인" : "회원가입"}</Title>
+      <Form onSubmit={handleSubmit}>
+        <Input
           type="text"
           name="username"
           placeholder="사용자 이름"
           value={formData.username}
           onChange={handleChange}
           required
-          className="p-3 border-2 border-gray-200 rounded focus:outline-none focus:border-green-500 text-base"
         />
-        <input
+        <Input
           type="password"
           name="password"
           placeholder="비밀번호"
           value={formData.password}
           onChange={handleChange}
           required
-          className="p-3 border-2 border-gray-200 rounded focus:outline-none focus:border-green-500 text-base"
         />
         {!isLogin && (
-          <input
+          <Input
             type="password"
             name="confirmPassword"
             placeholder="비밀번호 확인"
             value={formData.confirmPassword}
             onChange={handleChange}
             required
-            className="p-3 border-2 border-gray-200 rounded focus:outline-none focus:border-green-500 text-base"
           />
         )}
-        {error && <p className="text-red-500 text-sm m-0">{error}</p>}
-        <button
-          type="submit"
-          className="p-3 bg-green-500 text-white rounded text-base font-semibold hover:bg-green-600 transition-colors"
-        >
+        {error && <ErrorMessage>{error}</ErrorMessage>}
+        <SubmitButton type="submit">
           {isLogin ? "로그인" : "회원가입"}
-        </button>
-      </form>
-      <button
+        </SubmitButton>
+      </Form>
+      <ToggleButton
         type="button"
-        className="mt-4 text-green-500 text-sm hover:underline focus:outline-none bg-transparent"
         onClick={() => {
           setIsLogin(!isLogin);
           setError("");
@@ -140,8 +226,8 @@ const Auth = () => {
         {isLogin
           ? "계정이 없으신가요? 회원가입"
           : "이미 계정이 있으신가요? 로그인"}
-      </button>
-    </div>
+      </ToggleButton>
+    </AuthContainer>
   );
 };
 

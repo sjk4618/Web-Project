@@ -15,8 +15,10 @@ import { useUserStore } from "./store/useUserStore";
 
 const AppContainer = styled.div`
   min-height: 100vh;
-  background-color: #f5f5f5;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   padding: 2rem;
+  font-family: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui,
+    Roboto, sans-serif;
 `;
 
 const Header = styled.header`
@@ -24,50 +26,82 @@ const Header = styled.header`
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
-  padding: 1rem;
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
 `;
 
 const Title = styled.h1`
   margin: 0;
-  color: #333;
+  color: #2c3e50;
+  font-size: 1.8rem;
+  font-weight: 700;
+  background: linear-gradient(45deg, #2c3e50, #3498db);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 `;
 
 const Nav = styled.nav`
   display: flex;
-  gap: 1rem;
+  gap: 1.5rem;
+  align-items: center;
 `;
 
 const Button = styled.button`
-  padding: 0.5rem 1rem;
+  padding: 0.7rem 1.5rem;
   border: none;
-  border-radius: 5px;
-  background-color: ${(props) => (props.primary ? "#4CAF50" : "#ddd")};
-  color: ${(props) => (props.primary ? "white" : "#333")};
+  border-radius: 8px;
+  background-color: ${(props) => (props.primary ? "#3498db" : "#f8f9fa")};
+  color: ${(props) => (props.primary ? "white" : "#2c3e50")};
   cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
   &:hover {
-    background-color: ${(props) => (props.primary ? "#45a049" : "#ccc")};
+    background-color: ${(props) => (props.primary ? "#2980b9" : "#e9ecef")};
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   }
 `;
 
 const UserInfo = styled.div`
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.5rem;
+  font-weight: 500;
+  color: #2c3e50;
 `;
 
 const NavLink = styled(Link)`
   text-decoration: none;
-  color: #333;
-  padding: 0.5rem 1rem;
-  border-radius: 5px;
+  color: #2c3e50;
+  padding: 0.7rem 1.2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.3s ease;
 
   &:hover {
-    background-color: #f5f5f5;
+    background-color: #f8f9fa;
+    color: #3498db;
+    transform: translateY(-2px);
   }
+`;
+
+const LoadingContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+`;
+
+const LoadingText = styled.h2`
+  color: #2c3e50;
+  font-size: 1.5rem;
+  font-weight: 600;
 `;
 
 function App() {
@@ -87,11 +121,9 @@ function App() {
 
   if (isLoading) {
     return (
-      <AppContainer>
-        <div style={{ textAlign: "center", padding: "2rem" }}>
-          <h2>로딩 중...</h2>
-        </div>
-      </AppContainer>
+      <LoadingContainer>
+        <LoadingText>로딩 중...</LoadingText>
+      </LoadingContainer>
     );
   }
 
