@@ -346,7 +346,7 @@ const TypingGame = () => {
   const [gameStats, setGameStats] = useState({
     typingSpeed: 0,
     accuracy: 0,
-    completedSentences: 0,
+    completedSentences: 1,
     correctWords: 0,
     elapsedTime: 0,
     averageAccuracy: 0,
@@ -510,7 +510,7 @@ const TypingGame = () => {
         console.log("현재 진행도:", currentProgress);
 
         // 진행도가 10을 초과하면 게임 종료
-        if (currentProgress >= 10) {
+        if (currentProgress > 10) {
           endGame();
           return;
         }
@@ -613,7 +613,7 @@ const TypingGame = () => {
         totalKeystrokes: 0,
         correctKeystrokes: 0,
         elapsedTime: 0,
-        completedSentences: 0,
+        completedSentences: 1,
         totalAccuracy: 0,
         totalInputs: 0,
         totalCorrectChars: 0,
@@ -773,7 +773,7 @@ const TypingGame = () => {
       totalKeystrokes: 0,
       correctKeystrokes: 0,
       elapsedTime: 0,
-      completedSentences: 0,
+      completedSentences: 1,
       totalAccuracy: 0,
       totalInputs: 0,
       totalCorrectChars: 0,
